@@ -1,0 +1,38 @@
+# Source files (only upload compiled JavaScript)
+src/
+*.ts
+tsconfig.json
+
+# Development files
+.git/
+.vscode/
+*.md
+ANALYSIS.md
+CHANGES_SUMMARY.md
+README.md
+
+# Environment template (don't upload template)
+.env.template
+env.example
+
+# Dependencies (Discloud installs these automatically)
+node_modules/
+
+# Build artifacts we don't need
+*.map
+*.d.ts
+*.d.ts.map
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test files
+test/
+*.test.js
+*.spec.js
+

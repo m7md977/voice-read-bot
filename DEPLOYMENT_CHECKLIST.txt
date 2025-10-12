@@ -1,0 +1,147 @@
+═══════════════════════════════════════════════════════════
+  🚀 DISCLOUD DEPLOYMENT CHECKLIST
+═══════════════════════════════════════════════════════════
+
+📦 PRE-DEPLOYMENT
+═══════════════════════════════════════════════════════════
+[ ] Bot works locally (tested with npm start)
+[ ] All TypeScript compiles (npm run build successful)
+[ ] Environment variables ready (from .env)
+[ ] Discloud account created
+
+═══════════════════════════════════════════════════════════
+📋 REQUIRED INFORMATION
+═══════════════════════════════════════════════════════════
+Have these ready before uploading:
+
+BOT_TOKEN: _________________________________
+CLIENT_ID: _________________________________
+ELEVENLABS_API_KEY: ________________________
+ELEVENLABS_VOICE_ID: 21m00Tcm4TlvDq8ikWAM (default)
+GLOBAL_COMMANDS: true
+BYPASSROLEID (optional): ___________________
+
+═══════════════════════════════════════════════════════════
+📦 CREATE DEPLOYMENT PACKAGE
+═══════════════════════════════════════════════════════════
+[ ] Run: npm run prepare-deploy
+[ ] Create ZIP file with:
+    [ ] dist/ folder (entire folder)
+    [ ] package.json
+    [ ] package-lock.json
+    [ ] discloud.config
+[ ] Verify ZIP size is reasonable (~2-5 MB)
+
+═══════════════════════════════════════════════════════════
+☁️ UPLOAD TO DISCLOUD
+═══════════════════════════════════════════════════════════
+[ ] Go to: https://discloud.app/dashboard
+[ ] Click "Upload Bot" or "New Application"
+[ ] Upload your ZIP file
+[ ] Wait for upload success message
+
+═══════════════════════════════════════════════════════════
+⚙️ CONFIGURE ENVIRONMENT
+═══════════════════════════════════════════════════════════
+In Discloud dashboard → Bot Settings → Environment Variables:
+
+[ ] Add BOT_TOKEN
+[ ] Add CLIENT_ID
+[ ] Add GLOBAL_COMMANDS (set to: true)
+[ ] Add TTS_PROVIDER (set to: elevenlabs)
+[ ] Add ELEVENLABS_API_KEY
+[ ] Add ELEVENLABS_VOICE_ID
+[ ] Add ELEVENLABS_TTS_MODEL_ID (set to: eleven_turbo_v2_5)
+[ ] Add BYPASSROLEID (if using bypass role feature)
+[ ] Double-check all values are correct (no extra spaces!)
+
+═══════════════════════════════════════════════════════════
+▶️ START BOT
+═══════════════════════════════════════════════════════════
+[ ] Click "Start" button in Discloud
+[ ] Wait for status to show "Online" (green)
+[ ] Check logs for startup message:
+    "Ready! Logged in as YourBot#1234"
+    "Voice Read Bot is active in X servers"
+
+═══════════════════════════════════════════════════════════
+🎮 DEPLOY SLASH COMMANDS
+═══════════════════════════════════════════════════════════
+Choose ONE method:
+
+Method A - Discloud Terminal:
+[ ] Open Terminal tab in Discloud
+[ ] Run: node dist/deploy-commands.js
+[ ] Wait for success message
+
+Method B - Local (faster):
+[ ] Run: npm run deploy-commands
+[ ] Wait for success message
+
+═══════════════════════════════════════════════════════════
+✅ VERIFY DEPLOYMENT
+═══════════════════════════════════════════════════════════
+[ ] Bot shows online in Discord
+[ ] Slash command appears when typing /read
+[ ] Join a voice channel
+[ ] Run: /read action:start
+[ ] Bot joins voice channel
+[ ] Send a text message
+[ ] Bot reads message aloud
+[ ] Test /read action:status (shows queue info)
+[ ] Test /read action:skip (skips message)
+[ ] Test /read action:stop (leaves channel)
+
+═══════════════════════════════════════════════════════════
+📊 POST-DEPLOYMENT MONITORING
+═══════════════════════════════════════════════════════════
+[ ] Check Discloud logs for errors
+[ ] Verify ElevenLabs API usage is working
+[ ] Test in multiple servers (if applicable)
+[ ] Monitor RAM usage (should be under 512 MB)
+[ ] Set up auto-restart if needed (already enabled)
+
+═══════════════════════════════════════════════════════════
+⚠️ COMMON ISSUES & FIXES
+═══════════════════════════════════════════════════════════
+
+Bot offline after deployment?
+→ Check BOT_TOKEN is correct (no extra spaces)
+→ Verify Discord bot has all required intents enabled
+
+Commands don't appear?
+→ Run deploy-commands.js again
+→ Wait 5-10 minutes for Discord to sync
+→ Try kicking bot and re-inviting
+
+Voice doesn't work?
+→ Verify APT=tools in discloud.config
+→ Check bot has Voice permissions in server
+→ Verify ELEVENLABS_API_KEY is valid
+
+Bot crashes frequently?
+→ Check Discloud logs for error details
+→ Increase RAM if needed (512 → 1024 MB)
+→ Verify all dependencies in package.json
+
+═══════════════════════════════════════════════════════════
+📖 DOCUMENTATION REFERENCE
+═══════════════════════════════════════════════════════════
+
+Quick Start:    QUICK_DEPLOY.md
+Full Guide:     DEPLOY_DISCLOUD.md
+Bot Analysis:   ANALYSIS.md
+Recent Changes: CHANGES_SUMMARY.md
+
+═══════════════════════════════════════════════════════════
+🎉 DEPLOYMENT COMPLETE!
+═══════════════════════════════════════════════════════════
+
+Your bot is now live on Discloud! 
+
+Monitor: https://discloud.app/dashboard
+Logs: Dashboard → Your Bot → Logs
+Status: Dashboard → Your Bot → Overview
+
+═══════════════════════════════════════════════════════════
+

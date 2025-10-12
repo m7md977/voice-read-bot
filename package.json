@@ -1,0 +1,40 @@
+{
+  "name": "vcreader",
+  "version": "1.0.0",
+  "description": "A lightweight Discord bot for voice message reading",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "deploy-commands": "ts-node src/deploy-commands.ts",
+    "prepare-deploy": "node prepare-deploy.js",
+    "create-zip": "node create-deploy-zip.js"
+  },
+  "dependencies": {
+    "@discordjs/opus": "^0.10.0",
+    "@discordjs/voice": "0.18.0",
+    "discord.js": "^14.22.1",
+    "dotenv": "^17.2.1",
+    "ffmpeg-static": "^5.2.0",
+    "libsodium-wrappers": "^0.7.15",
+    "node-fetch": "latest",
+    "opusscript": "^0.0.8",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "archiver": "^7.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "voice",
+    "tts",
+    "typescript"
+  ],
+  "author": "Senku",
+  "license": "ISC"
+}
