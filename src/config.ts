@@ -79,26 +79,56 @@ export interface ElevenLabsModel {
 }
 
 export const ELEVENLABS_MODELS: { [key: string]: ElevenLabsModel } = {
-  'eleven_turbo_v2_5': {
-    id: 'eleven_turbo_v2_5',
-    name: 'Eleven Turbo v2.5',
-    description: 'Fast, efficient model optimized for real-time applications',
-    isRealTime: true,
-    defaultSettings: {
-      stability: 0.5,
-      similarity_boost: 0.7
-    }
-  },
-  'eleven_v3_alpha': {
-    id: 'eleven_v3_alpha',
-    name: 'Eleven v3 (Alpha)',
-    description: 'Latest model with enhanced expressiveness (Alpha)',
+  'eleven_v3': {
+    id: 'eleven_v3',
+    name: 'Eleven v3',
+    description: 'Latest generation model with highest quality (3k chars/~3min)',
     isRealTime: false,
     defaultSettings: {
       stability: 0.7,
       similarity_boost: 0.7,
       style: 0.7,
       use_speaker_boost: true
+    }
+  },
+  'eleven_turbo_v2_5': {
+    id: 'eleven_turbo_v2_5',
+    name: 'Eleven Turbo v2.5',
+    description: 'Fast, efficient model optimized for real-time (40k chars/~40min)',
+    isRealTime: true,
+    defaultSettings: {
+      stability: 0.5,
+      similarity_boost: 0.7
+    }
+  },
+  'eleven_flash_v2_5': {
+    id: 'eleven_flash_v2_5',
+    name: 'Eleven Flash v2.5',
+    description: 'Fastest model with good quality (40k chars/~40min)',
+    isRealTime: true,
+    defaultSettings: {
+      stability: 0.5,
+      similarity_boost: 0.7
+    }
+  },
+  'eleven_multilingual_v2': {
+    id: 'eleven_multilingual_v2',
+    name: 'Eleven Multilingual v2',
+    description: 'Best for non-English text (10k chars/~10min)',
+    isRealTime: false,
+    defaultSettings: {
+      stability: 0.7,
+      similarity_boost: 0.7
+    }
+  },
+  'eleven_english_sts_v2': {
+    id: 'eleven_english_sts_v2',
+    name: 'Eleven English STS v2',
+    description: 'Optimized for English speech-to-speech (10k chars/~10min)',
+    isRealTime: false,
+    defaultSettings: {
+      stability: 0.7,
+      similarity_boost: 0.7
     }
   }
 };

@@ -364,7 +364,13 @@ class VoiceReadSession {
         }),
       });
       if (!res.ok || !res.body) {
-        logger.warn('VOICE_READ', `ElevenLabs TTS HTTP ${res.status}`);
+        const errorText = await res.text().catch(() => 'No error details available');
+        logger.warn('VOICE_READ', `ElevenLabs TTS HTTP ${res.status}`, {
+          error: errorText,
+          modelId: model.id,
+          voiceId,
+          settings: model.defaultSettings
+        });
         return null;
       }
       // Convert web ReadableStream to Node Readable
