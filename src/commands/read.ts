@@ -1,6 +1,6 @@
 import { ChannelType, ChatInputCommandInteraction, PermissionFlagsBits, GuildTextBasedChannel } from 'discord.js';
 import { voiceReadManager } from '../services/voice/VoiceReadManager';
-import config from '../config';
+import config, { ELEVENLABS_MODELS, ELEVENLABS_VOICES } from '../config';
 import { logger } from '../services/logging';
 
 export const data = {
@@ -48,6 +48,26 @@ export const data = {
         { name: 'Replace emojis (grinning face)', value: 'replace' },
         { name: 'Skip emojis entirely', value: 'skip' }
       ]
+    },
+    {
+      name: 'model',
+      description: 'ElevenLabs model to use for voice synthesis',
+      type: 3, // STRING
+      required: false,
+      choices: Object.values(ELEVENLABS_MODELS).map(model => ({
+        name: `${model.name}${!model.isRealTime ? ' (may be slower)' : ''}`,
+        value: model.id
+      }))
+    },
+    {
+      name: 'voice',
+      description: 'Voice to use for reading messages',
+      type: 3, // STRING
+      required: false,
+      choices: Object.values(ELEVENLABS_VOICES).map(voice => ({
+        name: `${voice.name} - ${voice.description}`,
+        value: voice.id
+      }))
     }
   ]
 };
@@ -129,6 +149,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const speed = interaction.options.getNumber('speed') ?? 0.9;
     const maxLength = interaction.options.getInteger('max_length') ?? 1000;
     const emojiMode = interaction.options.getString('emoji_mode') ?? 'explain';
+    const modelId = interaction.options.getString('model');
+    const voiceId = interaction.options.getString('voice');
 
     if (action === 'start') {
       // Only defer if not already deferred or replied
@@ -176,14 +198,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       }
 
       try {
+        // Validate voice selection
+        if (voiceId && !Object.values(ELEVENLABS_VOICES).some(v => v.id === voiceId)) {
+          return interaction.editReply({
+            content: '❌ **Invalid voice selected**\n\nThe selected voice is not available. Please choose a valid voice from the options.'
+          });
+        }
+
         const options = {
           speed,
           maxLength,
           filterLinks: true,
-          pauseOnVoiceActivity: true,
           processEmojis: emojiMode !== 'skip',
           emojiMode: emojiMode === 'skip' ? 'explain' : emojiMode as 'explain' | 'replace',
-          bypassRole: config.bypassRoleId
+          bypassRole: config.bypassRoleId,
+          modelId: modelId || undefined,
+          voiceId: voiceId || undefined
         };
         
         // Attempt to start the session with timeout
@@ -195,6 +225,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         await Promise.race([startPromise, timeoutPromise]);
         
         // Success! Provide detailed feedback
+        // Validate model selection
+        if (modelId && !ELEVENLABS_MODELS[modelId]) {
+          return interaction.editReply({
+            content: '❌ **Invalid model selected**\n\nThe selected model is not available. Please choose a valid model from the options.'
+          });
+        }
+
+        const selectedModel = modelId ? ELEVENLABS_MODELS[modelId] : ELEVENLABS_MODELS.eleven_turbo_v2_5;
+        // Get selected voice or default to Rachel
+        const selectedVoice = (
+          voiceId ? Object.values(ELEVENLABS_VOICES).find(v => v.id === voiceId) : 
+          config.elevenLabsVoiceId ? Object.values(ELEVENLABS_VOICES).find(v => v.id === config.elevenLabsVoiceId) : 
+          ELEVENLABS_VOICES.rachel
+        );
+        
         const emojiModeText = emojiMode === 'skip' ? 'Skipped' : 
                              emojiMode === 'replace' ? 'Replaced' : 'Explained';
         
@@ -207,16 +252,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           fields: [
             {
               name: '⚙️ Settings',
-              value: `• **Speed:** ${speed}x\n• **Max length:** ${maxLength} characters\n• **Emojis:** ${emojiModeText}`,
+              value: `• **Speed:** ${speed}x\n• **Max length:** ${maxLength} characters\n• **Emojis:** ${emojiModeText}\n• **Model:** ${selectedModel.name}${!selectedModel.isRealTime ? ' ⚠️' : ''}\n• **Voice:** ${selectedVoice?.name || 'Rachel'} (${selectedVoice?.description || 'Default voice'})`,
               inline: true
             },
             {
               name: '🔧 Features',
-              value: `• Auto-leave after 30s if empty\n• Links automatically filtered\n• Pauses when you speak${bypassRoleText}`,
+              value: `• Auto-leave after 30s if empty\n• Links automatically filtered${bypassRoleText}`,
               inline: true
             }
           ],
-          footer: { text: 'Use /read action:pause, resume, or stop to control playback' }
+          footer: { text: selectedModel.isRealTime ? 'Use /read action:pause, resume, or stop to control playback' : '⚠️ Non-realtime model may have higher latency' }
         };
 
         return interaction.editReply({ embeds: [successEmbed] });

@@ -12,7 +12,7 @@ import {
 } from '@discordjs/voice';
 import { Guild, TextBasedChannel, VoiceBasedChannel, GuildMember } from 'discord.js';
 import { logger } from '../logging';
-import config from '../../config';
+import config, { ELEVENLABS_MODELS } from '../../config';
 import { Readable } from 'stream';
 import { EmojiProcessor } from './EmojiProcessor';
 
@@ -29,6 +29,8 @@ type VoiceReadOptions = {
   processEmojis: boolean;
   emojiMode: 'replace' | 'explain' | 'both';
   bypassRole?: string;
+  modelId?: string;
+  voiceId?: string;
 };
 
 type SessionKey = string; // `${guildId}:${voiceChannelId}`
@@ -275,7 +277,7 @@ class VoiceReadSession {
     
     // Filter out messages that are mostly special characters or numbers
     // But be more lenient if emojis were processed (since they add readable text)
-    const alphaCount = (processedText.match(/[a-zA-Z]/g) || []).length;
+    const alphaCount = (processedText.match(/[a-zA-Z\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/g) || []).length;
     const hasEmojis = EmojiProcessor.containsEmojis(trimmed);
     const threshold = hasEmojis ? 0.1 : 0.2; // More lenient for emoji messages
     
@@ -338,8 +340,13 @@ class VoiceReadSession {
   private async synthesizeWithElevenLabs(text: string): Promise<Readable | null> {
     try {
       if (!config.elevenLabsApiKey) return null;
-      const voiceId = config.elevenLabsVoiceId || '21m00Tcm4TlvDq8ikWAM'; // default (Alloy-like) if unset
+      const voiceId = this.options.voiceId || config.elevenLabsVoiceId || '21m00Tcm4TlvDq8ikWAM'; // default (Alloy-like) if unset
       const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`;
+
+      // Get model settings
+      const modelId = this.options.modelId || config.elevenLabsTtsModelId || 'eleven_turbo_v2_5';
+      const model = ELEVENLABS_MODELS[modelId] || ELEVENLABS_MODELS.eleven_turbo_v2_5;
+      
       const res = await fetch(url, {
         method: 'POST',
         headers: {
@@ -349,10 +356,9 @@ class VoiceReadSession {
         },
         body: JSON.stringify({ 
           text, 
-          model_id: config.elevenLabsTtsModelId || 'eleven_turbo_v2_5', 
+          model_id: model.id,
           voice_settings: { 
-            stability: 0.5, 
-            similarity_boost: 0.7,
+            ...model.defaultSettings,
             speed: this.options.speed 
           } 
         }),
@@ -622,7 +628,7 @@ export class VoiceReadManager {
       speed: 0.9, // Slightly slower than normal for better comprehension
       maxLength: 1000,
       filterLinks: true,
-      pauseOnVoiceActivity: true,
+      pauseOnVoiceActivity: false, // Never pause for voice activity
       processEmojis: true,
       emojiMode: 'explain' // Default to explaining emojis
     };
