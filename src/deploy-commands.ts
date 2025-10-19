@@ -1,9 +1,11 @@
 import { REST, Routes } from 'discord.js';
 import config from './config';
 import * as readCommand from './commands/read';
+import * as serversCommand from './commands/servers';
 
 const commands = [
-  readCommand.data
+  readCommand.data,
+  serversCommand.data
 ];
 
 // Construct and prepare an instance of the REST module

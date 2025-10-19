@@ -3,7 +3,9 @@ import { voiceReadManager } from './services/voice/VoiceReadManager';
 import { logger } from './services/logging';
 import config from './config';
 import * as readCommand from './commands/read';
+import * as serversCommand from './commands/servers';
 import { Command } from './types/Command';
+import { initializeDiscordLogger, getDiscordLogger } from './utils/discordLogger';
 
 // Create a new client instance
 const client = new Client({
@@ -18,10 +20,29 @@ const client = new Client({
 // Command collection
 const commands = new Collection<string, Command>();
 commands.set(readCommand.data.name, readCommand as Command);
+commands.set(serversCommand.data.name, serversCommand as Command);
 
-client.once(Events.ClientReady, () => {
+client.once(Events.ClientReady, async () => {
   logger.info('BOT', `Ready! Logged in as ${client.user?.tag}`);
   logger.info('BOT', `Voice Read Bot is active in ${client.guilds.cache.size} servers`);
+  
+  // Initialize Discord logger
+  initializeDiscordLogger(client);
+  
+  // Log all servers on startup
+  const guilds = client.guilds.cache;
+  if (guilds.size > 0) {
+    logger.info('BOT', 'Current servers:');
+    guilds.forEach(guild => {
+      logger.info('BOT', `  - ${guild.name} (ID: ${guild.id}, Members: ${guild.memberCount})`);
+    });
+  }
+  
+  // Send startup log to Discord
+  const discordLogger = getDiscordLogger();
+  if (discordLogger) {
+    await discordLogger.sendStartupLog();
+  }
   
   // Set bot status to "Playing /read"
   client.user?.setActivity('/read', { type: 0 }); // 0 is ActivityType.Playing
@@ -121,6 +142,65 @@ client.on(Events.Error, error => {
 // Handle warnings
 client.on(Events.Warn, info => {
   logger.warn('CLIENT_WARN', 'Discord client warning', info);
+});
+
+// Handle guild join events
+client.on(Events.GuildCreate, async guild => {
+  logger.info('GUILD_JOIN', `Bot joined a new server: ${guild.name} (ID: ${guild.id}, Members: ${guild.memberCount})`);
+  logger.info('GUILD_JOIN', `Total servers: ${client.guilds.cache.size}`);
+  
+  // Fetch owner information and send to Discord
+  try {
+    const owner = await guild.fetchOwner();
+    logger.info('GUILD_JOIN', `Server owner: ${owner.user.tag} (${owner.user.id})`);
+    
+    // Send to join-left Discord channel
+    const discordLogger = getDiscordLogger();
+    if (discordLogger) {
+      await discordLogger.sendJoinLeaveLog(
+        'join',
+        guild.name,
+        guild.id,
+        guild.memberCount,
+        owner.user.tag,
+        owner.user.id
+      );
+    }
+  } catch (error) {
+    logger.debug('GUILD_JOIN', 'Could not fetch owner information', error);
+    
+    // Still send log without owner info
+    const discordLogger = getDiscordLogger();
+    if (discordLogger) {
+      await discordLogger.sendJoinLeaveLog(
+        'join',
+        guild.name,
+        guild.id,
+        guild.memberCount
+      );
+    }
+  }
+});
+
+// Handle guild leave events
+client.on(Events.GuildDelete, async guild => {
+  logger.info('GUILD_LEAVE', `Bot left server: ${guild.name} (ID: ${guild.id})`);
+  logger.info('GUILD_LEAVE', `Total servers: ${client.guilds.cache.size}`);
+  
+  // Send to join-left Discord channel
+  const discordLogger = getDiscordLogger();
+  if (discordLogger) {
+    await discordLogger.sendJoinLeaveLog(
+      'leave',
+      guild.name,
+      guild.id,
+      guild.memberCount
+    );
+  }
+  
+  // Clean up any active voice reading sessions for this guild
+  // The VoiceReadManager should handle this automatically, but log it anyway
+  logger.info('GUILD_LEAVE', `Cleaning up any active sessions for guild ${guild.id}`);
 });
 
 // Graceful shutdown

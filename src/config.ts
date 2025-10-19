@@ -14,53 +14,108 @@ export interface ElevenLabsVoice {
 }
 
 export const ELEVENLABS_VOICES: { [key: string]: ElevenLabsVoice } = {
+  // English Voices
   'rachel': {
     id: '21m00Tcm4TlvDq8ikWAM',
-    name: 'Rachel',
-    description: 'Calm and professional voice, ideal for narration',
-    category: 'professional'
+    name: 'Rachel 🇺🇸',
+    description: 'Calm and professional English voice',
+    category: 'english'
   },
   'domi': {
     id: 'AZnzlk1XvdvUeBnXmlld',
-    name: 'Domi',
-    description: 'Confident and energetic voice',
-    category: 'professional'
+    name: 'Domi 🇺🇸',
+    description: 'Confident and energetic English voice',
+    category: 'english'
   },
   'bella': {
     id: 'EXAVITQu4vr4xnSDxMaL',
-    name: 'Bella',
-    description: 'Soft and gentle voice',
-    category: 'professional'
+    name: 'Bella 🇺🇸',
+    description: 'Soft and gentle English voice',
+    category: 'english'
   },
   'antoni': {
     id: 'ErXwobaYiN019PkySvjV',
-    name: 'Antoni',
-    description: 'Warm and engaging male voice',
-    category: 'professional'
+    name: 'Antoni 🇺🇸',
+    description: 'Warm and engaging male English voice',
+    category: 'english'
   },
   'elli': {
     id: 'MF3mGyEYCl7XYWbV9V6O',
-    name: 'Elli',
-    description: 'Approachable and friendly voice',
-    category: 'professional'
+    name: 'Elli 🇺🇸',
+    description: 'Approachable and friendly English voice',
+    category: 'english'
   },
   'josh': {
     id: 'TxGEqnHWrfWFTfGW9XjX',
-    name: 'Josh',
-    description: 'Deep and authoritative male voice',
-    category: 'professional'
+    name: 'Josh 🇺🇸',
+    description: 'Deep and authoritative male English voice',
+    category: 'english'
   },
   'arnold': {
     id: 'VR6AewLTigWG4xSOukaG',
-    name: 'Arnold',
-    description: 'Powerful and commanding male voice',
-    category: 'professional'
+    name: 'Arnold 🇺🇸',
+    description: 'Powerful and commanding male English voice',
+    category: 'english'
   },
   'sam': {
     id: 'yoZ06aMxZJJ28mfd3POQ',
-    name: 'Sam',
-    description: 'Serious and thoughtful male voice',
-    category: 'professional'
+    name: 'Sam 🇺🇸',
+    description: 'Serious and thoughtful male English voice',
+    category: 'english'
+  },
+  'glinda': {
+    id: 'z9fAnlkpzviPz146aGWa',
+    name: 'Glinda 🇺🇸',
+    description: 'Witchy and dramatic female English voice',
+    category: 'english'
+  },
+  'lily': {
+    id: 'pFZP5JQG7iQjIQuC4Bku',
+    name: 'Lily 🇬🇧',
+    description: 'British accent, warm and expressive',
+    category: 'english'
+  },
+  'george': {
+    id: 'JBFqnCBsd6RMkjVDRZzb',
+    name: 'George 🇬🇧',
+    description: 'British male, warm and conversational',
+    category: 'english'
+  },
+  'callum': {
+    id: 'N2lVS1w4EtoT3dr4eOWO',
+    name: 'Callum 🇬🇧',
+    description: 'British male, hoarse and intense',
+    category: 'english'
+  },
+  'charlotte': {
+    id: 'XB0fDUnXU5powFXDhCwa',
+    name: 'Charlotte 🇬🇧',
+    description: 'British female, seductive and confident',
+    category: 'english'
+  },
+  
+  // Arabic Voices - Modern Standard Arabic (MSA)
+  'salma': {
+    id: 'a1KZUXKFVFDOb33I1uqr',
+    name: 'Salma 🇸🇦 عربي',
+    description: 'Modern Standard Arabic female voice - Clear and professional',
+
+    category: 'arabic'
+  },
+  'mohammad': {
+    id: 'tlETan7Okc4pzjD0z62P',
+    name: 'Mohammad 🇸🇦 عربي',
+    description: 'Modern Standard Arabic male voice - Deep and authoritative',
+
+    category: 'arabic'
+  },
+  
+  // Gulf Arabic
+  'adeeb': {
+    id: 's83SAGdFTflAwJcAV81K',
+    name: 'Adeeb 🇦🇪 خليجي',
+    description: 'Gulf Arabic male voice - Warm and engaging',
+    category: 'arabic'
   }
 };
 
@@ -85,7 +140,7 @@ export const ELEVENLABS_MODELS: { [key: string]: ElevenLabsModel } = {
     description: 'Latest generation model with highest quality (3k chars/~3min)',
     isRealTime: false,
     defaultSettings: {
-      stability: 0.7,
+      stability: 0.5, // v3 only accepts 0.0, 0.5, or 1.0
       similarity_boost: 0.7,
       style: 0.7,
       use_speaker_boost: true
@@ -144,6 +199,12 @@ interface Config {
   elevenLabsTtsModelId?: string;
   // Voice Read Bypass
   bypassRoleId?: string;
+  // Dev Server
+  devServerId?: string;
+  // Logging Channels
+  botCategoryId?: string;
+  logsChannelId?: string;
+  joinLeftChannelId?: string;
 }
 
 const config: Config = {
@@ -157,6 +218,12 @@ const config: Config = {
   elevenLabsTtsModelId: process.env.ELEVENLABS_TTS_MODEL_ID,
   // Voice Read Bypass
   bypassRoleId: process.env.BYPASSROLEID,
+  // Dev Server
+  devServerId: process.env.DEV_SERVER_ID,
+  // Logging Channels
+  botCategoryId: process.env.BOT_CATEGORY,
+  logsChannelId: process.env.LOGS_CHANNEL,
+  joinLeftChannelId: process.env.JOIN_LEFT_CHANNEL,
 };
 
 // Validate required configuration

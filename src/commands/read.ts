@@ -17,36 +17,9 @@ export const data = {
         { name: 'Stop reading messages', value: 'stop' },
         { name: 'Pause reading', value: 'pause' },
         { name: 'Resume reading', value: 'resume' },
-        { name: 'Skip current message', value: 'skip' },
-        { name: 'Clear queue', value: 'clear' },
-        { name: 'Show queue status', value: 'status' }
-      ]
-    },
-    {
-      name: 'speed',
-      description: 'Speech speed (0.5 = slow, 1.0 = normal, 1.5 = fast)',
-      type: 10, // NUMBER
-      required: false,
-      min_value: 0.5,
-      max_value: 2.0
-    },
-    {
-      name: 'max_length',
-      description: 'Maximum message length to read (default: 1000 characters)',
-      type: 4, // INTEGER
-      required: false,
-      min_value: 50,
-      max_value: 2000
-    },
-    {
-      name: 'emoji_mode',
-      description: 'How to handle emojis in messages',
-      type: 3, // STRING
-      required: false,
-      choices: [
-        { name: 'Explain emojis (😀 grinning face)', value: 'explain' },
-        { name: 'Replace emojis (grinning face)', value: 'replace' },
-        { name: 'Skip emojis entirely', value: 'skip' }
+        // { name: 'Skip current message', value: 'skip' },
+        // { name: 'Clear queue', value: 'clear' },
+        // { name: 'Show queue status', value: 'status' }
       ]
     },
     {
@@ -146,11 +119,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     const action = interaction.options.getString('action', true);
-    const speed = interaction.options.getNumber('speed') ?? 0.9;
-    const maxLength = interaction.options.getInteger('max_length') ?? 1000;
-    const emojiMode = interaction.options.getString('emoji_mode') ?? 'explain';
     const modelId = interaction.options.getString('model');
     const voiceId = interaction.options.getString('voice');
+    
+    // Use default values for disabled options
+    const speed = 1.0; // Normal speed
+    const maxLength = 3000; // Default max length
+    const emojiMode = 'skip'; // Skip emojis by default
 
     if (action === 'start') {
       // Only defer if not already deferred or replied
@@ -232,18 +207,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           });
         }
 
-        const selectedModel = modelId ? ELEVENLABS_MODELS[modelId] : ELEVENLABS_MODELS.eleven_turbo_v2_5;
+        const selectedModel = modelId ? ELEVENLABS_MODELS[modelId] : ELEVENLABS_MODELS.eleven_v3;
         // Get selected voice or default to Rachel
         const selectedVoice = (
           voiceId ? Object.values(ELEVENLABS_VOICES).find(v => v.id === voiceId) : 
           config.elevenLabsVoiceId ? Object.values(ELEVENLABS_VOICES).find(v => v.id === config.elevenLabsVoiceId) : 
           ELEVENLABS_VOICES.rachel
         );
-        
-        const emojiModeText = emojiMode === 'skip' ? 'Skipped' : 
-                             emojiMode === 'replace' ? 'Replaced' : 'Explained';
-        
-        const bypassRoleText = config.bypassRoleId ? ` | 🎭 Bypass role configured` : '';
         
         const successEmbed = {
           color: 0x00ff00, // Green
@@ -252,13 +222,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           fields: [
             {
               name: '⚙️ Settings',
-              value: `• **Speed:** ${speed}x\n• **Max length:** ${maxLength} characters\n• **Emojis:** ${emojiModeText}\n• **Model:** ${selectedModel.name}${!selectedModel.isRealTime ? ' ⚠️' : ''}\n• **Voice:** ${selectedVoice?.name || 'Rachel'} (${selectedVoice?.description || 'Default voice'})`,
-              inline: true
-            },
-            {
-              name: '🔧 Features',
-              value: `• Auto-leave after 30s if empty\n• Links automatically filtered${bypassRoleText}`,
-              inline: true
+              value: `• **Model:** ${selectedModel.name}${!selectedModel.isRealTime ? ' ⚠️' : ''}\n• **Voice:** ${selectedVoice?.name || 'Rachel'}`,
+              inline: false
             }
           ],
           footer: { text: selectedModel.isRealTime ? 'Use /read action:pause, resume, or stop to control playback' : '⚠️ Non-realtime model may have higher latency' }
