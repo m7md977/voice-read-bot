@@ -218,6 +218,11 @@ npm run deploy-commands  # Register slash commands with Discord
 npm run create-zip       # Build the Discloud deployment ZIP
 ```
 
+## Contributing
+
+Issues and pull requests are welcome. Fork the repo, create a branch, and open a
+PR — please run `npm run build` first to make sure it compiles.
+
 ## License
 
-ISC — see `package.json`.
+Released under the [ISC License](LICENSE) — free to use, modify, and distribute.
