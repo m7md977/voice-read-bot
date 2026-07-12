@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Voice Read Bot - Bring your Discord text chats to life with high-quality text-to-speech">
+    <title>Voice Read Bot - Discord TTS Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            padding: 20px 0;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .logo-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #5865F2, #3b5998);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 100px 0;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            animation: fadeInUp 1s ease;
+        }
+
+        .hero .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease 0.2s backwards;
+        }
+
+        .hero-description {
+            font-size: 1.2rem;
+            margin-bottom: 50px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeInUp 1s ease 0.4s backwards;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 1s ease 0.6s backwards;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #5865F2;
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(88, 101, 242, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: #4752c4;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(88, 101, 242, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 80px 0;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            opacity: 0.9;
+            line-height: 1.8;
+        }
+
+        /* How to Use Section */
+        .how-to-use {
+            padding: 80px 0;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .step {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            background: #5865F2;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .step h3 {
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        /* Support Section */
+        .support {
+            padding: 80px 0;
+            background: rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .support-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .support-content p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 0;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        footer p {
+            opacity: 0.8;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .hero-description {
+                font-size: 1rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .steps {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Decorative elements */
+        .blob {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .blob-1 {
+            top: -200px;
+            left: -200px;
+        }
+
+        .blob-2 {
+            bottom: -200px;
+            right: -200px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Decorative blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-img">🎧</div>
+                    <span>VCReader</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>👋 Voice Read Bot</h1>
+            <p class="subtitle">Created by Senku</p>
+            <div class="hero-description">
+                <p>🎧 I bring your text chats to life by reading messages aloud in voice channels — clear, fast, and fun!</p>
+                <p>🛠️ Powered by high-quality TTS, smart pausing, and customizable settings.</p>
+            </div>
+            <div class="cta-buttons">
+                <a href="https://discord.com/oauth2/authorize?client_id=1426846600940093533&permissions=8&integration_type=0&scope=bot" class="btn btn-primary" target="_blank">Add to Discord</a>
+                <a href="https://discord.gg/NeznwufaUm" class="btn btn-secondary" target="_blank">Join Support Server</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">✨ Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">🎤</span>
+                    <h3>High-Quality TTS</h3>
+                    <p>Crystal clear text-to-speech powered by advanced AI technology. Every message sounds natural and professional.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">⚡</span>
+                    <h3>Fast & Responsive</h3>
+                    <p>Lightning-fast message processing ensures your conversations flow smoothly without delays.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🎨</span>
+                    <h3>Customizable Settings</h3>
+                    <p>Tailor the bot to your needs with adjustable voice settings, speed controls, and more.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🤖</span>
+                    <h3>Smart Pausing</h3>
+                    <p>Intelligent message handling with automatic pausing and queue management for the best experience.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">😊</span>
+                    <h3>Emoji Support</h3>
+                    <p>Emojis are automatically converted to readable text, making conversations more expressive.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🔧</span>
+                    <h3>Easy to Use</h3>
+                    <p>Simple slash commands make it effortless to get started. No complicated setup required!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How to Use Section -->
+    <section class="how-to-use">
+        <div class="container">
+            <h2 class="section-title">🚀 How to Get Started</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Add the Bot</h3>
+                    <p>Click "Add to Discord" and select your server</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Join Voice Channel</h3>
+                    <p>Join any voice channel in your server</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Use /read Command</h3>
+                    <p>Type /read in any text channel to start</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>Enjoy!</h3>
+                    <p>Messages will be read aloud automatically</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Support Section -->
+    <section class="support">
+        <div class="container">
+            <div class="support-content">
+                <h2 class="section-title">💬 Need Help?</h2>
+                <p>Have feedback, questions, or need support? Join the 7ajar community server!</p>
+                <a href="https://discord.gg/NeznwufaUm" class="btn btn-primary" target="_blank">Join 7ajar Server</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>© 2025 Voice Read Bot | Created by Senku</p>
+            <p style="margin-top: 10px; opacity: 0.6;">Bringing text chats to life, one message at a time 🎧</p>
+        </div>
+    </footer>
+</body>
+</html>
+

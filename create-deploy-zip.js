@@ -53,11 +53,11 @@ if (!fs.existsSync('.env')) {
   console.log('   ⚠️  .env file not found!');
   console.log('');
   console.log('   📝 Create a .env file with your configuration:');
-  console.log('      Copy .env.template to .env and fill in your values');
+  console.log('      Copy env.example to .env and fill in your values');
   console.log('');
   console.error('❌ Cannot proceed without .env file.');
-  console.error('   Run: copy .env.template .env (Windows)');
-  console.error('   Or:  cp .env.template .env (Mac/Linux)');
+  console.error('   Run: copy env.example .env (Windows)');
+  console.error('   Or:  cp env.example .env (Mac/Linux)');
   console.error('   Then edit .env with your actual tokens.');
   process.exit(1);
 } else {
@@ -183,8 +183,8 @@ function printSuccessMessage(zipFileName) {
   console.log(`3. Upload: ${zipFileName}`);
   console.log('4. Start your bot! (environment variables are in .env)');
   console.log('5. Deploy commands: node dist/deploy-commands.js\n');
-  console.log('📖 Full guide: QUICK_DEPLOY.md');
-  console.log('✅ Checklist: DEPLOYMENT_CHECKLIST.txt\n');
+  console.log('📖 Full guide: docs/QUICK_DEPLOY.md');
+  console.log('✅ Checklist: docs/DEPLOYMENT_CHECKLIST.txt\n');
   console.log('═'.repeat(60));
   console.log('✨ Your bot is ready for deployment! ✨');
   console.log('═'.repeat(60) + '\n');

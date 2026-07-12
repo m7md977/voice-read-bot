@@ -3,8 +3,13 @@ import config from './config';
 import * as readCommand from './commands/read';
 import * as serversCommand from './commands/servers';
 
-const commands = [
-  readCommand.data,
+// Global commands (available in all servers)
+const globalCommands = [
+  readCommand.data
+];
+
+// Dev-only commands (only available in dev server)
+const devCommands = [
   serversCommand.data
 ];
 
@@ -14,24 +19,33 @@ const rest = new REST({ version: '10' }).setToken(config.botToken);
 // Deploy commands
 (async () => {
   try {
-    console.log(`Started refreshing ${commands.length} application (/) commands.`);
-
-    // The put method is used to fully refresh all commands in the guild/globally
-    let data: any;
-    
+    // Deploy global commands
     if (config.globalCommands) {
-      // Deploy globally (takes up to 1 hour to sync)
-      data = await rest.put(
+      console.log(`Started refreshing ${globalCommands.length} global application (/) commands.`);
+      const data: any = await rest.put(
         Routes.applicationCommands(config.clientId),
-        { body: commands },
+        { body: globalCommands },
       );
-      console.log(`Successfully reloaded ${data.length} global application (/) commands.`);
+      console.log(`✅ Successfully reloaded ${data.length} global application (/) commands.`);
     } else {
-      console.log('No guild ID provided and global commands disabled. Please set GLOBAL_COMMANDS=true or provide a GUILD_ID.');
-      process.exit(1);
+      console.log('ℹ️ Global commands disabled. Skipping global deployment.');
     }
+
+    // Deploy dev-only commands to dev server
+    if (config.devServerId) {
+      console.log(`Started refreshing ${devCommands.length} dev server application (/) commands.`);
+      const devData: any = await rest.put(
+        Routes.applicationGuildCommands(config.clientId, config.devServerId),
+        { body: devCommands },
+      );
+      console.log(`✅ Successfully reloaded ${devData.length} dev server application (/) commands.`);
+    } else {
+      console.log('⚠️ Warning: DEV_SERVER_ID not set. Dev-only commands (like /servers) will not be deployed.');
+    }
+
+    console.log('\n🎉 Command deployment completed!');
   } catch (error) {
-    console.error('Error deploying commands:', error);
+    console.error('❌ Error deploying commands:', error);
     process.exit(1);
   }
 })();

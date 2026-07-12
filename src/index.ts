@@ -198,9 +198,10 @@ client.on(Events.GuildDelete, async guild => {
     );
   }
   
-  // Clean up any active voice reading sessions for this guild
-  // The VoiceReadManager should handle this automatically, but log it anyway
-  logger.info('GUILD_LEAVE', `Cleaning up any active sessions for guild ${guild.id}`);
+  // Clean up any active voice reading sessions for this guild so their
+  // timers and voice connections don't leak after we've left.
+  const stoppedSessions = voiceReadManager.stopAllSessionsForGuild(guild.id);
+  logger.info('GUILD_LEAVE', `Cleaned up ${stoppedSessions} active session(s) for guild ${guild.id}`);
 });
 
 // Graceful shutdown

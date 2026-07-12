@@ -67,17 +67,9 @@ class VoiceReadSession {
 
   public async start(): Promise<void> {
     if (this.destroyed) return;
-    
-    await this.establishVoiceConnection();
-    
-    // Start monitoring for empty channel
-    this.startEmptyChannelMonitoring();
-    
-    // Set up voice activity detection if enabled
-    if (this.options.pauseOnVoiceActivity) {
-      this.setupVoiceActivityDetection();
-    }
 
+    // Create the audio player up front so it can be (re)subscribed to every
+    // connection we establish — including any recreated after a reconnect.
     if (!this.player) {
       this.player = createAudioPlayer({
         behaviors: { noSubscriber: NoSubscriberBehavior.Pause },
@@ -91,7 +83,16 @@ class VoiceReadSession {
         this.isPlaying = false;
         void this.playNext();
       });
-      this.connection?.subscribe(this.player);
+    }
+
+    await this.establishVoiceConnection();
+
+    // Start monitoring for empty channel
+    this.startEmptyChannelMonitoring();
+
+    // Set up voice activity detection if enabled
+    if (this.options.pauseOnVoiceActivity) {
+      this.setupVoiceActivityDetection();
     }
   }
 
@@ -113,10 +114,16 @@ class VoiceReadSession {
       // Wait for connection to be ready with timeout
       await entersState(this.connection, VoiceConnectionStatus.Ready, 10_000);
       logger.info('VOICE_READ', `Successfully connected to voice channel: ${this.voiceChannel.name}`);
-      
+
+      // (Re)subscribe the player to the (possibly newly created) connection so
+      // audio keeps flowing after a reconnect, not just on the first connect.
+      if (this.player && this.connection) {
+        this.connection.subscribe(this.player);
+      }
+
       // Reset retry count on successful connection
       this.connectionRetryCount = 0;
-      
+
     } catch (error) {
       logger.error('VOICE_READ', 'Failed to establish voice connection', error);
       
@@ -131,10 +138,19 @@ class VoiceReadSession {
         
         setTimeout(() => {
           if (!this.destroyed) {
-            void this.establishVoiceConnection();
+            // Attach a catch: this retry runs detached, so if it exhausts all
+            // attempts and throws, the rejection would otherwise be unhandled
+            // and could crash the process.
+            void this.establishVoiceConnection().catch(retryError => {
+              logger.error('VOICE_READ', 'Voice connection retries exhausted', retryError);
+              if (this.sourceTextChannel && 'send' in this.sourceTextChannel && typeof this.sourceTextChannel.send === 'function') {
+                this.sourceTextChannel.send('❌ Could not connect to the voice channel. Voice reading has stopped.').catch(() => {});
+              }
+              voiceReadManager.stopSession(this.guild.id, this.voiceChannel.id);
+            });
           }
         }, this.CONNECTION_RETRY_DELAY);
-        
+
         return;
       }
       
@@ -705,6 +721,24 @@ export class VoiceReadManager {
 
   public getSession(guildId: string, voiceChannelId: string): VoiceReadSession | undefined {
     return this.sessions.get(this.key(guildId, voiceChannelId));
+  }
+
+  /**
+   * Stop and clean up every active session belonging to a guild.
+   * Used when the bot is removed from a guild so timers/connections don't leak.
+   */
+  public stopAllSessionsForGuild(guildId: string): number {
+    let stopped = 0;
+    for (const [sessionKey, session] of this.sessions.entries()) {
+      if (!sessionKey.startsWith(`${guildId}:`)) continue;
+      session.stop();
+      this.sessions.delete(sessionKey);
+      for (const [textId, mappedKey] of this.textChannelIndex.entries()) {
+        if (mappedKey === sessionKey) this.textChannelIndex.delete(textId);
+      }
+      stopped++;
+    }
+    return stopped;
   }
 
   public pauseSession(guildId: string, voiceChannelId: string): boolean {

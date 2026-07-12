@@ -1,85 +1,83 @@
 # Voice Read Bot
 
-A lightweight Discord bot that reads text messages aloud in voice channels using high-quality text-to-speech.
+A lightweight Discord bot that reads text messages aloud in voice channels using high-quality ElevenLabs text-to-speech.
 
 ## Features
 
-- 🎙️ **Voice Message Reading**: Joins voice channels and reads text messages aloud
-- 🎛️ **Customizable Settings**: Adjust speech speed, message length limits, and emoji handling
-- 🔇 **Smart Pausing**: Automatically pauses when users speak (voice activity detection)
-- 😊 **Emoji Processing**: Converts emojis to readable text descriptions
-- 🔗 **Link Filtering**: Automatically filters out URLs to avoid reading them
-- ⏰ **Auto-Leave**: Automatically leaves empty voice channels after 30 seconds
-- 🎭 **Bypass Roles**: Configure roles that can speak without pausing the bot
+- 🎙️ **Voice Message Reading**: Joins a voice channel and reads new messages from a text channel aloud
+- 🗣️ **Multiple Voices**: Choose from a range of English and Arabic ElevenLabs voices
+- 🎚️ **Selectable Models**: Pick the ElevenLabs model that best balances quality vs. speed
+- 😊 **Emoji Processing**: Converts emojis to spoken descriptions (🔥 → "fire")
+- 🔗 **Link & Mention Filtering**: Strips URLs, invites, and mentions so they aren't read aloud
+- 🧹 **Markdown Cleanup**: Removes bold/italic/spoiler/code formatting before speaking
+- ⏰ **Auto-Leave**: Automatically leaves a voice channel after it's been empty for 30 seconds
+- ♻️ **Resilient Connections**: Automatically retries and recovers dropped voice connections
 
 ## Commands
 
 ### `/read`
-The main command for controlling voice reading functionality.
+
+The main command for controlling voice reading.
 
 **Options:**
-- `action` (required): 
-  - `start` - Begin reading messages
-  - `stop` - Stop reading and leave voice channel  
-  - `pause` - Pause reading (stay connected)
-  - `resume` - Resume reading
-  - `skip` - Skip currently playing message
-  - `clear` - Clear message queue
-  - `status` - Show queue and playback status
-- `speed` (optional): Speech speed from 0.5 to 2.0 (default: 0.9)
-- `max_length` (optional): Maximum message length to read, 50-2000 characters (default: 1000)
-- `emoji_mode` (optional): How to handle emojis
-  - `explain` - Read emoji with description (😀 grinning face)
-  - `replace` - Replace emoji with description only
-  - `skip` - Skip emojis entirely
 
-## 🚀 Deployment Options
+- `action` (required):
+  - `start` — Join your voice channel and begin reading messages from the current text channel
+  - `stop` — Stop reading and leave the voice channel
+  - `pause` — Pause reading (stay connected)
+  - `resume` — Resume reading
+  - `skip` — Skip the message currently being read
+  - `clear` — Clear the pending message queue
+  - `status` — Show queue size and playback state
+- `model` (optional): ElevenLabs model to use for synthesis (e.g. Turbo v2.5, Flash v2.5, Multilingual v2, Eleven v3). Defaults to the value of `ELEVENLABS_TTS_MODEL_ID`, or Turbo v2.5.
+- `voice` (optional): Voice to read with. Defaults to `ELEVENLABS_VOICE_ID`, or a Rachel-like voice.
 
-### Deploy to Discloud (Recommended for 24/7 hosting)
+**Example:**
 
-Quick deploy guide available! See:
-- **⚡ Quick Start**: `QUICK_DEPLOY.md` (5 minutes)
-- **📖 Full Guide**: `DEPLOY_DISCLOUD.md` (complete instructions)
-- **✅ Checklist**: `DEPLOYMENT_CHECKLIST.txt` (step-by-step)
-
-```bash
-# Create deployment ZIP automatically
-npm run create-zip
-
-# Or just verify (without creating ZIP)
-npm run prepare-deploy
+```
+/read action:start voice:George 🇬🇧 model:Eleven Turbo v2.5
 ```
 
-### Run Locally
+Start reading in your current voice channel, then send messages in the text channel — the bot reads each one as it arrives, prefixed with the sender's display name.
 
-See installation instructions below for local development and testing.
+### `/servers` *(dev only)*
 
----
+Lists every server the bot is in. Only works inside the server configured via `DEV_SERVER_ID`.
+
+## 🚀 Deployment
+
+### Deploy to Discloud (24/7 hosting)
+
+```bash
+# Build and package the bot into a deployable ZIP
+npm run create-zip
+```
+
+Then upload the generated `discloud-deploy.zip` to the [Discloud dashboard](https://discloud.app/dashboard). Full guides live in the [`docs/`](docs/) folder:
+
+- **⚡ Quick Start**: [`docs/QUICK_DEPLOY.md`](docs/QUICK_DEPLOY.md)
+- **📖 Full Guide**: [`docs/DEPLOY_DISCLOUD.md`](docs/DEPLOY_DISCLOUD.md)
+- **✅ Checklist**: [`docs/DEPLOYMENT_CHECKLIST.txt`](docs/DEPLOYMENT_CHECKLIST.txt)
 
 ## Setup
 
 ### Prerequisites
 
-1. **Discord Bot**: Create a Discord application and bot at [Discord Developer Portal](https://discord.com/developers/applications)
-2. **ElevenLabs Account**: Sign up at [ElevenLabs](https://elevenlabs.io/) for TTS functionality
-3. **Node.js**: Version 18 or higher
+1. **Discord Bot**: Create an application and bot at the [Discord Developer Portal](https://discord.com/developers/applications)
+2. **ElevenLabs Account**: Sign up at [ElevenLabs](https://elevenlabs.io/) for TTS
+3. **Node.js**: Version 18 or higher (the bot relies on the built-in global `fetch`)
 
 ### Installation
 
-1. **Clone/Download**: Get the bot files
-```bash
-git clone <repository-url>
-cd voice-read-bot
-```
+1. **Clone and install:**
 
-2. **Install Dependencies**:
 ```bash
+git clone https://github.com/m7md977/voice-read-bot.git
+cd voice-read-bot
 npm install
 ```
 
-3. **Environment Configuration**:
-   - Copy `env.example` to `.env`
-   - Fill in your configuration values:
+2. **Configure environment:** Copy `env.example` to `.env` and fill in your values:
 
 ```env
 # Discord Bot Configuration
@@ -95,117 +93,90 @@ ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
 ELEVENLABS_VOICE_ID=21m00Tcm4TlvDq8ikWAM
 ELEVENLABS_TTS_MODEL_ID=eleven_turbo_v2_5
 
-# Optional: Voice Read Bypass Role
-BYPASSROLEID=role_id_here
+# Optional: Dev server for the /servers command
+DEV_SERVER_ID=your_dev_server_id_here
+
+# Optional: Discord logging channels
+BOT_CATEGORY=your_bot_category_id_here
+LOGS_CHANNEL=your_logs_channel_id_here
+JOIN_LEFT_CHANNEL=your_join_left_channel_id_here
 ```
 
-4. **Deploy Commands**:
+See [`docs/SETUP_ENV.md`](docs/SETUP_ENV.md) for a full walkthrough of each variable.
+
+3. **Register slash commands:**
+
 ```bash
 npm run deploy-commands
 ```
 
-5. **Build and Start**:
+4. **Build and run:**
+
 ```bash
-npm run build
-npm start
+npm run build   # Compile TypeScript to dist/
+npm start       # Run the compiled bot
 ```
 
-Or for development:
+Or for development with live TypeScript:
+
 ```bash
 npm run dev
 ```
 
 ### Discord Bot Permissions
 
-Your bot needs these permissions:
-- **Send Messages**: To send command responses
-- **Use Slash Commands**: To register and use slash commands
-- **Connect**: To join voice channels
-- **Speak**: To play audio in voice channels
-- **Use Voice Activity**: For voice activity detection
-- **Read Message History**: To monitor messages for reading
+The bot needs these permissions:
 
-### Bot Invite URL
+- **Send Messages** — to reply to commands
+- **Use Slash Commands** — to register and receive `/read`
+- **Connect** — to join voice channels
+- **Speak** — to play audio
+- **Use Voice Activity** — required to transmit voice
+- **View Channel** / **Read Message History** — to monitor the text channel for messages to read
 
-Use this URL format to invite your bot (replace CLIENT_ID):
+Invite URL (replace `YOUR_CLIENT_ID`):
+
 ```
 https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=3146752&scope=bot%20applications.commands
 ```
 
 ## Configuration Details
 
-### TTS Provider (ElevenLabs)
+### Voices & Models
 
-This bot uses ElevenLabs for high-quality text-to-speech. You'll need:
+Voices and their ElevenLabs IDs are defined in [`src/config.ts`](src/config.ts) and exposed as choices on the `/read` command. English (US & UK) and Modern Standard / Gulf Arabic voices are included. Available models range from `eleven_v3` (highest quality) to `eleven_flash_v2_5` (fastest). Set a default voice/model via `ELEVENLABS_VOICE_ID` and `ELEVENLABS_TTS_MODEL_ID`, or override per-session with the command options.
 
-1. **API Key**: Get from [ElevenLabs API Keys](https://elevenlabs.io/app/speech-synthesis)
-2. **Voice ID**: Choose a voice from your ElevenLabs library (default is Rachel-like voice)
-3. **Model ID**: TTS model to use (default: `eleven_turbo_v2_5` for fast generation)
+### Message Handling
 
-### Voice Settings
-
-- **Speed**: 0.5 = slow, 1.0 = normal, 1.5 = fast, 2.0 = very fast
-- **Max Length**: Prevents reading extremely long messages
-- **Emoji Processing**: Makes emojis readable in voice
-- **Link Filtering**: Automatically skips messages containing URLs
-- **Voice Activity Detection**: Pauses reading when users speak
-
-### Bypass Role
-
-Configure a role ID in `BYPASSROLEID` to allow certain users (like moderators) to speak without pausing the voice reading. This is useful for:
-- Moderators who need to give instructions
-- DJs or event hosts
-- Server administrators
+- **Emoji Processing**: Emojis are converted to spoken descriptions before synthesis
+- **Link Filtering**: URLs, `discord.gg` invites, and bare domains are stripped out
+- **Mentions**: User/role/channel mentions are read as "someone" / "a role" / "a channel"
+- **Length Limit**: Very long messages are skipped to avoid runaway TTS usage
+- **Queue Limit**: The per-session queue is capped (oldest dropped) to bound memory use
 
 ## Usage
 
-1. **Join a Voice Channel**: Users must be in a voice channel to start voice reading
-2. **Start Reading**: Use `/read action:start` in a text channel
-3. **Send Messages**: Any messages in that text channel will be read aloud
-4. **Control Playback**: Use pause/resume/stop actions as needed
-
-### Example Usage
-
-```
-/read action:start speed:1.2 max_length:500 emoji_mode:explain
-```
-
-This starts voice reading with:
-- 20% faster speech
-- Maximum 500 characters per message
-- Emojis explained with descriptions
+1. **Join a voice channel** — you must be in one to start reading
+2. **Start reading** — run `/read action:start` in a text channel
+3. **Send messages** — messages in that text channel are read aloud in order
+4. **Control playback** — use `pause` / `resume` / `skip` / `clear` / `stop` as needed
 
 ## Troubleshooting
 
-### Common Issues
+**"Voice reading is not configured"**
+- Ensure `TTS_PROVIDER=elevenlabs` and `ELEVENLABS_API_KEY` are set and valid
 
-1. **"Voice reading is not configured"**
-   - Ensure `TTS_PROVIDER=elevenlabs` and `ELEVENLABS_API_KEY` are set
-   - Verify your ElevenLabs API key is valid
+**"Missing permissions"**
+- Confirm the bot has Connect, Speak, and Use Voice Activity in the voice channel, and can view the text channel and read message history
 
-2. **"Missing permissions"**
-   - Check bot has Connect, Speak, and Use Voice Activity permissions
-   - Verify bot can view the text channel and read message history
+**"Connection timeout"**
+- The voice channel may be full or restricted; check Discord's status and try again
 
-3. **"Connection timeout"**
-   - Voice channel might be full or restricted
-   - Check Discord server status
-   - Try a different voice channel
+**No audio playback**
+- Verify your ElevenLabs API key, voice ID, and remaining credits
+- `ffmpeg` is bundled via `ffmpeg-static`, so no separate install is needed
 
-4. **No audio playback**
-   - Verify ElevenLabs API key and voice ID
-   - Check if you have ElevenLabs credits remaining
-   - Ensure ffmpeg is installed (should be handled by ffmpeg-static package)
-
-### Logs
-
-The bot logs important events to the console:
-- Connection status
-- TTS generation
-- Voice activity detection
-- Error messages
-
-Check the logs for detailed error information if something isn't working.
+The bot logs connection status, TTS activity, and errors to the console. If `LOGS_CHANNEL` is configured, it also posts startup and error notifications to Discord.
 
 ## Development
 
@@ -215,48 +186,38 @@ Check the logs for detailed error information if something isn't working.
 voice-read-bot/
 ├── src/
 │   ├── commands/
-│   │   └── read.ts                 # Main voice read command
+│   │   ├── read.ts                 # Main /read command
+│   │   └── servers.ts              # Dev-only /servers command
 │   ├── services/
 │   │   ├── voice/
-│   │   │   ├── VoiceReadManager.ts # Core voice reading logic  
-│   │   │   └── EmojiProcessor.ts   # Emoji to text conversion
+│   │   │   ├── VoiceReadManager.ts # Core voice session + queue logic
+│   │   │   └── EmojiProcessor.ts   # Emoji → spoken-text conversion
 │   │   └── logging/
-│   │       └── index.ts            # Simple logging utilities
+│   │       └── index.ts            # Console logger
 │   ├── types/
-│   │   └── Command.ts              # TypeScript interfaces
-│   ├── config.ts                   # Configuration management
-│   ├── index.ts                    # Bot entry point
-│   └── deploy-commands.ts          # Command registration
+│   │   └── Command.ts              # Command interface
+│   ├── utils/
+│   │   └── discordLogger.ts        # Optional Discord channel logging
+│   ├── config.ts                   # Env config + voice/model tables
+│   ├── index.ts                    # Bot entry point & event handlers
+│   └── deploy-commands.ts          # Slash command registration
+├── docs/                           # Deployment & setup guides
+├── create-deploy-zip.js            # Builds the Discloud deployment ZIP
 ├── package.json
 ├── tsconfig.json
 └── README.md
 ```
 
-### Building
+### Scripts
 
 ```bash
-npm run build    # Compile TypeScript to dist/
-npm start        # Run compiled bot
-npm run dev      # Run with ts-node for development
+npm run build            # Compile TypeScript to dist/
+npm start                # Run the compiled bot
+npm run dev              # Run from source with ts-node
+npm run deploy-commands  # Register slash commands with Discord
+npm run create-zip       # Build the Discloud deployment ZIP
 ```
 
 ## License
 
-This project is licensed under the ISC License.
-
-## 📚 Documentation
-
-- **Quick Deploy**: `QUICK_DEPLOY.md` - Fast Discloud deployment (5 min)
-- **Full Deploy Guide**: `DEPLOY_DISCLOUD.md` - Complete Discloud instructions
-- **Bot Analysis**: `ANALYSIS.md` - In-depth workflow and optimization details
-- **Recent Changes**: `CHANGES_SUMMARY.md` - Latest improvements and features
-- **Checklist**: `DEPLOYMENT_CHECKLIST.txt` - Deployment verification steps
-
-## Support
-
-For issues and questions:
-1. Check the troubleshooting section above
-2. Review console logs for error details
-3. Verify your configuration and permissions
-4. Test with a simple voice channel setup first
-5. See `ANALYSIS.md` for advanced tuning options
+ISC — see `package.json`.

@@ -321,38 +321,31 @@ export class EmojiProcessor {
   } = { mode: 'explain', addPauses: true }): string {
     if (!text) return text;
 
-    let processedText = text;
-
-    // Find all emojis in the text
-    const emojis = text.match(this.EMOJI_REGEX) || [];
-    
-    if (emojis.length === 0) return text;
-
-    // Process each emoji
-    for (const emoji of emojis) {
+    // Single left-to-right pass over the original string. Using String.replace
+    // with the global regex + a callback means every occurrence (including
+    // repeated identical emojis) is handled exactly once, and replaced text is
+    // never re-scanned — unlike a loop of `replace(emoji, ...)` which only
+    // replaces the first literal match and can double-process 'explain' output.
+    return text.replace(this.EMOJI_REGEX, (emoji: string) => {
       const description = this.EMOJI_MAPPINGS[emoji] || this.getGenericEmojiDescription(emoji);
-      
+
       switch (options.mode) {
         case 'replace':
-          // Replace emoji with description
-          processedText = processedText.replace(emoji, description);
-          break;
-          
-        case 'explain':
-          // Add explanation after emoji
-          const explanation = options.addPauses ? `, ${description},` : ` ${description}`;
-          processedText = processedText.replace(emoji, emoji + explanation);
-          break;
-          
-        case 'both':
-          // Replace with description and add pause
-          const replacement = options.addPauses ? `, ${description},` : description;
-          processedText = processedText.replace(emoji, replacement);
-          break;
-      }
-    }
+          // Replace emoji with description only
+          return description;
 
-    return processedText;
+        case 'explain':
+          // Keep the emoji and append its description
+          return options.addPauses ? `${emoji}, ${description},` : `${emoji} ${description}`;
+
+        case 'both':
+          // Replace with description, optionally padded with pauses
+          return options.addPauses ? `, ${description},` : description;
+
+        default:
+          return emoji;
+      }
+    });
   }
 
   /**
@@ -370,10 +363,13 @@ export class EmojiProcessor {
   }
 
   /**
-   * Check if text contains emojis
+   * Check if text contains emojis.
+   * Uses String.match (not RegExp.test) because EMOJI_REGEX is global: test()
+   * would advance and persist lastIndex on the shared regex, giving
+   * inconsistent results across calls.
    */
   public static containsEmojis(text: string): boolean {
-    return this.EMOJI_REGEX.test(text);
+    return (text.match(this.EMOJI_REGEX)?.length ?? 0) > 0;
   }
 
   /**
@@ -382,12 +378,5 @@ export class EmojiProcessor {
   public static countEmojis(text: string): number {
     const matches = text.match(this.EMOJI_REGEX);
     return matches ? matches.length : 0;
-  }
-
-  /**
-   * Extract all emojis from text
-   */
-  public static extractEmojis(text: string): string[] {
-    return text.match(this.EMOJI_REGEX) || [];
   }
 }

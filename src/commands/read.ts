@@ -17,9 +17,9 @@ export const data = {
         { name: 'Stop reading messages', value: 'stop' },
         { name: 'Pause reading', value: 'pause' },
         { name: 'Resume reading', value: 'resume' },
-        // { name: 'Skip current message', value: 'skip' },
-        // { name: 'Clear queue', value: 'clear' },
-        // { name: 'Show queue status', value: 'status' }
+        { name: 'Skip current message', value: 'skip' },
+        { name: 'Clear queue', value: 'clear' },
+        { name: 'Show queue status', value: 'status' }
       ]
     },
     {
@@ -122,10 +122,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const modelId = interaction.options.getString('model');
     const voiceId = interaction.options.getString('voice');
     
-    // Use default values for disabled options
+    // Fixed defaults (these are not exposed as command options)
     const speed = 1.0; // Normal speed
     const maxLength = 3000; // Default max length
-    const emojiMode = 'skip'; // Skip emojis by default
+    const emojiMode = 'replace' as const; // Convert emojis to spoken descriptions (e.g. 🔥 -> "fire")
 
     if (action === 'start') {
       // Only defer if not already deferred or replied
@@ -184,19 +184,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           speed,
           maxLength,
           filterLinks: true,
-          processEmojis: emojiMode !== 'skip',
-          emojiMode: emojiMode === 'skip' ? 'explain' : emojiMode as 'explain' | 'replace',
+          processEmojis: true,
+          emojiMode,
           bypassRole: config.bypassRoleId,
           modelId: modelId || undefined,
           voiceId: voiceId || undefined
         };
         
-        // Attempt to start the session with timeout
+        // Attempt to start the session with a hard timeout. Promise.race can't
+        // cancel the loser, so guard the background startSession against an
+        // unhandled rejection if the timeout wins the race.
         const startPromise = voiceReadManager.startSession(interaction.guild, voiceChannel, interaction.channel, options);
-        const timeoutPromise = new Promise((_, reject) => 
+        startPromise.catch(() => { /* handled via the race + timeout cleanup below */ });
+        const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Connection timeout')), 15000)
         );
-        
+
         await Promise.race([startPromise, timeoutPromise]);
         
         // Success! Provide detailed feedback
@@ -232,8 +235,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return interaction.editReply({ embeds: [successEmbed] });
         
       } catch (error) {
+        // If the timeout won the race, startSession may still finish in the
+        // background and leave an orphaned session — stop any session it registered.
+        voiceReadManager.stopSession(interaction.guild.id, voiceChannel.id);
+
         logger.error('VOICE_READ_COMMAND', 'Failed to start voice reading session', error, interaction.guild);
-        
+
         let errorMessage = '❌ **Failed to start voice reading**\n\n';
         
         if (error instanceof Error) {
@@ -250,11 +257,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                           '• Channel might be full\n• Channel might have restrictions\n• Discord API issues\n\n' +
                           '💡 **Try a different voice channel**';
           } else {
-            errorMessage += `🔧 **Technical Error**\n\`${error.message}\`\n\n` +
-                          '💡 **Please try again or contact support**';
+            errorMessage += '🔧 **Technical Error**\nSomething went wrong while starting voice reading.\n\n' +
+                          '💡 **Please try again, or contact a server admin if it keeps happening**';
           }
         } else {
-          errorMessage += '🔧 **Unknown Error**\nSomething unexpected happened.\n\n💡 **Please try again or contact support**';
+          errorMessage += '🔧 **Unknown Error**\nSomething unexpected happened.\n\n💡 **Please try again or contact a server admin**';
         }
 
         return interaction.editReply({ content: errorMessage });
@@ -344,7 +351,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           fields: [
             {
               name: '💡 What happens now?',
-              value: '• Queued messages will start playing\n• New messages will be read automatically\n• Voice activity detection is active',
+              value: '• Queued messages will start playing\n• New messages will be read automatically',
               inline: false
             }
           ],
@@ -465,9 +472,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     
     const errorMessage = '❌ **Command Error**\n\n' +
                         'An unexpected error occurred while processing your request. ' +
-                        'Please try again or contact support if the issue persists.\n\n' +
-                        `**Error:** \`${error instanceof Error ? error.message : 'Unknown error'}\``;
-    
+                        'Please try again or contact a server admin if the issue persists.';
+
     try {
       if (interaction.deferred && !interaction.replied) {
         return interaction.editReply({ content: errorMessage });
