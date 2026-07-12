@@ -148,8 +148,8 @@ export const ELEVENLABS_MODELS: { [key: string]: ElevenLabsModel } = {
   },
   'eleven_turbo_v2_5': {
     id: 'eleven_turbo_v2_5',
-    name: 'Eleven Turbo v2.5',
-    description: 'Fast, efficient model optimized for real-time (40k chars/~40min)',
+    name: 'Eleven Turbo v2.5 (legacy)',
+    description: 'Older low-latency model — superseded by Flash v2.5 (40k chars/~40min)',
     isRealTime: true,
     defaultSettings: {
       stability: 0.5,
@@ -169,23 +169,16 @@ export const ELEVENLABS_MODELS: { [key: string]: ElevenLabsModel } = {
   'eleven_multilingual_v2': {
     id: 'eleven_multilingual_v2',
     name: 'Eleven Multilingual v2',
-    description: 'Best for non-English text (10k chars/~10min)',
-    isRealTime: false,
-    defaultSettings: {
-      stability: 0.7,
-      similarity_boost: 0.7
-    }
-  },
-  'eleven_english_sts_v2': {
-    id: 'eleven_english_sts_v2',
-    name: 'Eleven English STS v2',
-    description: 'Optimized for English speech-to-speech (10k chars/~10min)',
+    description: 'Highest quality, best for non-English text (10k chars/~10min)',
     isRealTime: false,
     defaultSettings: {
       stability: 0.7,
       similarity_boost: 0.7
     }
   }
+  // NOTE: only text-to-speech model_ids belong here. eleven_english_sts_v2 was
+  // removed because it is a speech-to-speech (voice changer) model and fails on
+  // the text-to-speech endpoint.
 };
 
 interface Config {

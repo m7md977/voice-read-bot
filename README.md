@@ -29,13 +29,13 @@ The main command for controlling voice reading.
   - `skip` — Skip the message currently being read
   - `clear` — Clear the pending message queue
   - `status` — Show queue size and playback state
-- `model` (optional): ElevenLabs model to use for synthesis (e.g. Turbo v2.5, Flash v2.5, Multilingual v2, Eleven v3). Defaults to the value of `ELEVENLABS_TTS_MODEL_ID`, or Turbo v2.5.
+- `model` (optional): ElevenLabs model to use for synthesis (e.g. Flash v2.5, Multilingual v2, Eleven v3). Defaults to the value of `ELEVENLABS_TTS_MODEL_ID`, or Flash v2.5.
 - `voice` (optional): Voice to read with. Defaults to `ELEVENLABS_VOICE_ID`, or a Rachel-like voice.
 
 **Example:**
 
 ```
-/read action:start voice:George 🇬🇧 model:Eleven Turbo v2.5
+/read action:start voice:George 🇬🇧 model:Eleven Flash v2.5
 ```
 
 Start reading in your current voice channel, then send messages in the text channel — the bot reads each one as it arrives, prefixed with the sender's display name.
@@ -91,7 +91,7 @@ GLOBAL_COMMANDS=true
 TTS_PROVIDER=elevenlabs
 ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
 ELEVENLABS_VOICE_ID=21m00Tcm4TlvDq8ikWAM
-ELEVENLABS_TTS_MODEL_ID=eleven_turbo_v2_5
+ELEVENLABS_TTS_MODEL_ID=eleven_flash_v2_5
 
 # Optional: Dev server for the /servers command
 DEV_SERVER_ID=your_dev_server_id_here

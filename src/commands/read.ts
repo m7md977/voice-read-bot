@@ -210,7 +210,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           });
         }
 
-        const selectedModel = modelId ? ELEVENLABS_MODELS[modelId] : ELEVENLABS_MODELS.eleven_v3;
+        const selectedModel = modelId ? ELEVENLABS_MODELS[modelId] : ELEVENLABS_MODELS.eleven_flash_v2_5;
         // Get selected voice or default to Rachel
         const selectedVoice = (
           voiceId ? Object.values(ELEVENLABS_VOICES).find(v => v.id === voiceId) : 

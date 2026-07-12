@@ -359,9 +359,9 @@ class VoiceReadSession {
       const voiceId = this.options.voiceId || config.elevenLabsVoiceId || '21m00Tcm4TlvDq8ikWAM'; // default (Alloy-like) if unset
       const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`;
 
-      // Get model settings
-      const modelId = this.options.modelId || config.elevenLabsTtsModelId || 'eleven_turbo_v2_5';
-      const model = ELEVENLABS_MODELS[modelId] || ELEVENLABS_MODELS.eleven_turbo_v2_5;
+      // Get model settings (Flash v2.5 is the current low-latency default)
+      const modelId = this.options.modelId || config.elevenLabsTtsModelId || 'eleven_flash_v2_5';
+      const model = ELEVENLABS_MODELS[modelId] || ELEVENLABS_MODELS.eleven_flash_v2_5;
       
       const res = await fetch(url, {
         method: 'POST',
