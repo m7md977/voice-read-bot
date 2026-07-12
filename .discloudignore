@@ -1,38 +1,34 @@
-# Source files (only upload compiled JavaScript)
-src/
-*.ts
-tsconfig.json
+# Discloud builds from source (BUILD=npm run build), so the TypeScript
+# sources and tsconfig.json MUST be uploaded — do not ignore them.
 
-# Development files
+# Git & editor tooling
 .git/
+.gitignore
+.discloudignore
 .vscode/
-*.md
-ANALYSIS.md
-CHANGES_SUMMARY.md
-README.md
-
-# Environment template (don't upload template)
-.env.template
-env.example
+.idea/
 
 # Dependencies (Discloud installs these automatically)
 node_modules/
 
-# Build artifacts we don't need
-*.map
-*.d.ts
-*.d.ts.map
+# Local build output (Discloud compiles fresh on deploy)
+build/
+dist/
 
-# OS files
-.DS_Store
-Thumbs.db
+# Secrets — set these in the Discloud dashboard, never upload them
+.env
+.env.*
 
-# Logs
+# Documentation & website (not needed to run the bot)
+docs/
+*.md
+index.html
+assets/
+
+# Archives, logs, OS files
+*.zip
 *.log
 logs/
-
-# Test files
-test/
-*.test.js
-*.spec.js
-
+.DS_Store
+Thumbs.db
+Desktop.ini

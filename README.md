@@ -44,20 +44,36 @@ Start reading in your current voice channel, then send messages in the text chan
 
 Lists every server the bot is in. Only works inside the server configured via `DEV_SERVER_ID`.
 
-## 🚀 Deployment
+## 🚀 Deployment (Discloud, 24/7 hosting)
 
-### Deploy to Discloud (24/7 hosting)
+Discloud compiles the bot from source on deploy — no local build or ZIP needed.
+The [`discloud.config`](discloud.config) tells it how:
 
-```bash
-# Build and package the bot into a deployable ZIP
-npm run create-zip
+```properties
+TYPE=bot
+MAIN=src/index.ts
+BUILD=npm run build   # compiles TypeScript to build/
+START=npm start       # runs node build/index.js
 ```
 
-Then upload the generated `discloud-deploy.zip` to the [Discloud dashboard](https://discloud.app/dashboard). Full guides live in the [`docs/`](docs/) folder:
+> **Note:** Discloud reserves the `dist/` folder for its own build process, so this
+> project compiles to `build/` instead.
 
-- **⚡ Quick Start**: [`docs/QUICK_DEPLOY.md`](docs/QUICK_DEPLOY.md)
-- **📖 Full Guide**: [`docs/DEPLOY_DISCLOUD.md`](docs/DEPLOY_DISCLOUD.md)
-- **✅ Checklist**: [`docs/DEPLOYMENT_CHECKLIST.txt`](docs/DEPLOYMENT_CHECKLIST.txt)
+**Deploy from GitHub:** in the Discloud dashboard, connect this repository and deploy.
+Discloud installs dependencies, runs `BUILD`, then `START`.
+
+**Or deploy with the CLI** (`npm i -g discloud`, then `discloud login`):
+
+```bash
+discloud upload
+```
+
+After the first deploy, set your secrets in the Discloud dashboard (**never commit `.env`**):
+`BOT_TOKEN`, `CLIENT_ID`, `ELEVENLABS_API_KEY`, and the rest from [`env.example`](env.example).
+Then register slash commands once from the Discloud terminal: `node build/deploy-commands.js`.
+
+> The guides in [`docs/`](docs/) describe an older build-locally-and-upload-a-ZIP
+> flow; the GitHub / `discloud upload` method above is the current one.
 
 ## Setup
 
@@ -113,7 +129,7 @@ npm run deploy-commands
 4. **Build and run:**
 
 ```bash
-npm run build   # Compile TypeScript to dist/
+npm run build   # Compile TypeScript to build/
 npm start       # Run the compiled bot
 ```
 
@@ -202,7 +218,7 @@ voice-read-bot/
 │   ├── index.ts                    # Bot entry point & event handlers
 │   └── deploy-commands.ts          # Slash command registration
 ├── docs/                           # Deployment & setup guides
-├── create-deploy-zip.js            # Builds the Discloud deployment ZIP
+├── discloud.config                 # Discloud build/run configuration
 ├── package.json
 ├── tsconfig.json
 └── README.md
@@ -211,11 +227,10 @@ voice-read-bot/
 ### Scripts
 
 ```bash
-npm run build            # Compile TypeScript to dist/
+npm run build            # Compile TypeScript to build/
 npm start                # Run the compiled bot
 npm run dev              # Run from source with ts-node
 npm run deploy-commands  # Register slash commands with Discord
-npm run create-zip       # Build the Discloud deployment ZIP
 ```
 
 ## Contributing
