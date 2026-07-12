@@ -11,10 +11,6 @@
 # Dependencies (Discloud installs these automatically)
 node_modules/
 
-# Local build output (Discloud compiles fresh on deploy)
-build/
-dist/
-
 # Secrets — set these in the Discloud dashboard, never upload them
 .env
 .env.*

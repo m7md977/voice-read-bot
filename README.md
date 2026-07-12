@@ -52,15 +52,13 @@ The [`discloud.config`](discloud.config) tells it how:
 ```properties
 TYPE=bot
 MAIN=src/index.ts
-BUILD=npm run build   # compiles TypeScript to build/
-START=npm start       # runs node build/index.js
+BUILD=npm run build   # compiles TypeScript to dist/
+START=npm start       # runs node dist/index.js
 ```
 
-> **Note:** Discloud reserves the `dist/` folder for its own build process, so this
-> project compiles to `build/` instead.
-
 **Deploy from GitHub:** in the Discloud dashboard, connect this repository and deploy.
-Discloud installs dependencies, runs `BUILD`, then `START`.
+Discloud installs dependencies, runs `BUILD`, then `START` (which runs the compiled
+`dist/index.js`).
 
 **Or deploy with the CLI** (`npm i -g discloud`, then `discloud login`):
 
@@ -70,7 +68,7 @@ discloud upload
 
 After the first deploy, set your secrets in the Discloud dashboard (**never commit `.env`**):
 `BOT_TOKEN`, `CLIENT_ID`, `ELEVENLABS_API_KEY`, and the rest from [`env.example`](env.example).
-Then register slash commands once from the Discloud terminal: `node build/deploy-commands.js`.
+Then register slash commands once from the Discloud terminal: `node dist/deploy-commands.js`.
 
 > The guides in [`docs/`](docs/) describe an older build-locally-and-upload-a-ZIP
 > flow; the GitHub / `discloud upload` method above is the current one.
@@ -129,7 +127,7 @@ npm run deploy-commands
 4. **Build and run:**
 
 ```bash
-npm run build   # Compile TypeScript to build/
+npm run build   # Compile TypeScript to dist/
 npm start       # Run the compiled bot
 ```
 
@@ -227,7 +225,7 @@ voice-read-bot/
 ### Scripts
 
 ```bash
-npm run build            # Compile TypeScript to build/
+npm run build            # Compile TypeScript to dist/
 npm start                # Run the compiled bot
 npm run dev              # Run from source with ts-node
 npm run deploy-commands  # Register slash commands with Discord

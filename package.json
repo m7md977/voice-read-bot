@@ -2,13 +2,13 @@
   "name": "vcreader",
   "version": "1.1.0",
   "description": "A lightweight Discord bot for voice message reading",
-  "main": "build/index.js",
+  "main": "dist/index.js",
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
     "build": "tsc",
-    "start": "node build/index.js",
+    "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "deploy-commands": "ts-node src/deploy-commands.ts"
   },
@@ -16,16 +16,16 @@
     "@discordjs/opus": "^0.10.0",
     "@discordjs/voice": "^0.19.2",
     "discord.js": "^14.22.1",
-    "dotenv": "^17.2.1",
-    "ffmpeg-static": "^5.2.0",
-    "libsodium-wrappers": "^0.7.15",
-    "opusscript": "^0.0.8",
+    "dotenv": "^17.4.2",
+    "ffmpeg-static": "^5.3.0",
+    "libsodium-wrappers": "^0.8.4",
+    "opusscript": "^0.1.1",
     "ws": "^8.18.3"
   },
   "devDependencies": {
-    "@types/node": "^24.3.0",
+    "@types/node": "^24.13.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.3"
   },
   "keywords": [
     "discord",
