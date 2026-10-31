@@ -11,6 +11,9 @@
 # Dependencies (Discloud installs these automatically)
 node_modules/
 
+# Build output — Discloud generates dist/ via BUILD=npm run build
+dist/
+
 # Secrets — set these in the Discloud dashboard, never upload them
 .env
 .env.*

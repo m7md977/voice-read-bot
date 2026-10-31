@@ -51,14 +51,14 @@ The [`discloud.config`](discloud.config) tells it how:
 
 ```properties
 TYPE=bot
-MAIN=src/index.ts
+MAIN=dist/index.js
 BUILD=npm run build   # compiles TypeScript to dist/
-START=npm start       # runs node dist/index.js
+START=npm run start   # runs node dist/index.js
 ```
 
 **Deploy from GitHub:** in the Discloud dashboard, connect this repository and deploy.
 Discloud installs dependencies, runs `BUILD`, then `START` (which runs the compiled
-`dist/index.js`).
+`dist/index.js`). Do not upload a prebuilt `dist/` — Discloud builds it.
 
 **Or deploy with the CLI** (`npm i -g discloud`, then `discloud login`):
 
