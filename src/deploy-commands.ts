@@ -1,11 +1,13 @@
 import { REST, Routes } from 'discord.js';
 import config from './config';
 import * as readCommand from './commands/read';
+import * as voiceCommand from './commands/voice';
 import * as serversCommand from './commands/servers';
 
 // Global commands (available in all servers)
 const globalCommands = [
-  readCommand.data
+  readCommand.data,
+  voiceCommand.data
 ];
 
 // Dev-only commands (only available in dev server)

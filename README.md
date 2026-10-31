@@ -5,7 +5,7 @@ A lightweight Discord bot that reads text messages aloud in voice channels using
 ## Features
 
 - 🎙️ **Voice Message Reading**: Joins a voice channel and reads new messages from a text channel aloud
-- 🗣️ **Multiple Voices**: Choose from a range of English and Arabic ElevenLabs voices
+- 🗣️ **Multiple Voices**: Choose from a range of English and Arabic ElevenLabs voices, including a personal voice per user
 - 🎚️ **Selectable Models**: Pick the ElevenLabs model that best balances quality vs. speed
 - 😊 **Emoji Processing**: Converts emojis to spoken descriptions (🔥 → "fire")
 - 🔗 **Link & Mention Filtering**: Strips URLs, invites, and mentions so they aren't read aloud
@@ -30,7 +30,7 @@ The main command for controlling voice reading.
   - `clear` — Clear the pending message queue
   - `status` — Show queue size and playback state
 - `model` (optional): ElevenLabs model to use for synthesis (e.g. v4 Turbo, Flash v2.5, Eleven v4). Defaults to the value of `ELEVENLABS_TTS_MODEL_ID`, or Flash v2.5.
-- `voice` (optional): Voice to read with. Defaults to `ELEVENLABS_VOICE_ID`, or a Rachel-like voice.
+- `voice` (optional): Default voice to read with. Defaults to `ELEVENLABS_VOICE_ID`, or a Rachel-like voice. Per-user voices from `/voice` override this.
 
 **Example:**
 
@@ -39,6 +39,25 @@ The main command for controlling voice reading.
 ```
 
 Start reading in your current voice channel, then send messages in the text channel — the bot reads each one as it arrives, prefixed with the sender's display name.
+
+### `/voice`
+
+Assign a specific ElevenLabs voice to a Discord user. That user's messages are read in their assigned voice; everyone else uses the session voice from `/read`.
+
+**Options:**
+
+- `action` (required): `set`, `clear`, or `show`
+- `voice` (optional): Voice to assign — required when `action` is `set`
+- `user` (optional): Who to assign it to. Defaults to you.
+
+**Examples:**
+
+```
+/voice action:set voice:George 🇬🇧
+/voice action:set user:@Alex voice:Salma 🇸🇦 عربي
+/voice action:show user:@Alex
+/voice action:clear
+```
 
 ### `/servers` *(dev only)*
 
@@ -158,7 +177,7 @@ https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=31
 
 ### Voices & Models
 
-Voices and their ElevenLabs IDs are defined in [`src/config.ts`](src/config.ts) and exposed as choices on the `/read` command. English (US & UK) and Modern Standard / Gulf Arabic voices are included. Available models range from `eleven_v4` / `eleven_v4_turbo` (highest quality) to `eleven_flash_v2_5` (fastest/cheapest). Set a default voice/model via `ELEVENLABS_VOICE_ID` and `ELEVENLABS_TTS_MODEL_ID`, or override per-session with the command options.
+Voices and their ElevenLabs IDs are defined in [`src/config.ts`](src/config.ts) and exposed as choices on the `/read` and `/voice` commands. English (US & UK) and Modern Standard / Gulf Arabic voices are included. Available models range from `eleven_v4` / `eleven_v4_turbo` (highest quality) to `eleven_flash_v2_5` (fastest/cheapest). Set a default voice/model via `ELEVENLABS_VOICE_ID` and `ELEVENLABS_TTS_MODEL_ID`, or override per-session with `/read`. Use `/voice` to pin a different voice to a specific user.
 
 ### Message Handling
 
@@ -201,10 +220,12 @@ voice-read-bot/
 ├── src/
 │   ├── commands/
 │   │   ├── read.ts                 # Main /read command
+│   │   ├── voice.ts                # Per-user TTS voice assignment
 │   │   └── servers.ts              # Dev-only /servers command
 │   ├── services/
 │   │   ├── voice/
 │   │   │   ├── VoiceReadManager.ts # Core voice session + queue logic
+│   │   │   ├── UserVoiceStore.ts   # Per-user voice assignments
 │   │   │   └── EmojiProcessor.ts   # Emoji → spoken-text conversion
 │   │   └── logging/
 │   │       └── index.ts            # Console logger

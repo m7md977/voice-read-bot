@@ -36,3 +36,6 @@ Desktop.ini
 *.tmp
 .cache/
 
+# Runtime data (per-user voice assignments)
+data/
+

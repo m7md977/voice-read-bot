@@ -15,10 +15,12 @@ import { logger } from '../logging';
 import config, { ELEVENLABS_MODELS } from '../../config';
 import { Readable } from 'stream';
 import { EmojiProcessor } from './EmojiProcessor';
+import { userVoiceStore } from './UserVoiceStore';
 
 type QueueItem = {
   text: string;
   userTag?: string;
+  userId?: string;
 };
 
 type VoiceReadOptions = {
@@ -209,7 +211,7 @@ class VoiceReadSession {
     });
   }
 
-  public async enqueue(text: string, userTag?: string): Promise<void> {
+  public async enqueue(text: string, userTag?: string, userId?: string): Promise<void> {
     if (this.destroyed || this.isPaused) return;
     
     // Filter text based on options
@@ -222,7 +224,7 @@ class VoiceReadSession {
       this.queue.shift(); // Remove oldest message
     }
     
-    this.queue.push({ text: filteredText, userTag });
+    this.queue.push({ text: filteredText, userTag, userId });
     logger.debug('VOICE_READ', `Message queued. Queue size: ${this.queue.length}`);
     
     if (!this.isPlaying) {
@@ -343,10 +345,10 @@ class VoiceReadSession {
     }
   }
 
-  private async synthesize(text: string): Promise<NodeJS.ReadableStream | Buffer | null> {
+  private async synthesize(text: string, voiceIdOverride?: string): Promise<NodeJS.ReadableStream | Buffer | null> {
     try {
       // Always use ElevenLabs for voice features
-      const stream = await this.synthesizeWithElevenLabs(text);
+      const stream = await this.synthesizeWithElevenLabs(text, voiceIdOverride);
       if (stream) return stream;
     } catch (err) {
       logger.warn('VOICE_READ', 'ElevenLabs TTS failed', err);
@@ -354,10 +356,10 @@ class VoiceReadSession {
     return null;
   }
 
-  private async synthesizeWithElevenLabs(text: string): Promise<Readable | null> {
+  private async synthesizeWithElevenLabs(text: string, voiceIdOverride?: string): Promise<Readable | null> {
     try {
       if (!config.elevenLabsApiKey) return null;
-      const voiceId = this.options.voiceId || config.elevenLabsVoiceId || '21m00Tcm4TlvDq8ikWAM'; // default (Alloy-like) if unset
+      const voiceId = voiceIdOverride || this.options.voiceId || config.elevenLabsVoiceId || '21m00Tcm4TlvDq8ikWAM'; // default (Alloy-like) if unset
       const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`;
 
       // Get model settings (Flash v2.5 is the current low-latency default)
@@ -418,7 +420,8 @@ class VoiceReadSession {
     const shouldAnnounceName = Boolean(next.userTag) && next.userTag !== this.lastSpokenUserTag;
     const textToSpeak = shouldAnnounceName ? `${next.userTag} says: ${next.text}` : next.text;
     this.lastSpokenUserTag = next.userTag ?? null;
-    const source = await this.synthesize(textToSpeak);
+    const assignedVoiceId = next.userId ? userVoiceStore.get(this.guild.id, next.userId) : undefined;
+    const source = await this.synthesize(textToSpeak, assignedVoiceId);
     if (!source) {
       this.isPlaying = false;
       return void this.playNext();
@@ -704,10 +707,10 @@ export class VoiceReadManager {
     }
   }
 
-  public async enqueue(guildId: string, voiceChannelId: string, text: string, userTag?: string): Promise<void> {
+  public async enqueue(guildId: string, voiceChannelId: string, text: string, userTag?: string, userId?: string): Promise<void> {
     const session = this.sessions.get(this.key(guildId, voiceChannelId));
     if (!session) return;
-    await session.enqueue(text, userTag);
+    await session.enqueue(text, userTag, userId);
   }
 
   public stopSession(guildId: string, voiceChannelId: string): boolean {

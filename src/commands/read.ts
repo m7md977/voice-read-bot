@@ -1,6 +1,6 @@
 import { ChannelType, ChatInputCommandInteraction, PermissionFlagsBits, GuildTextBasedChannel } from 'discord.js';
 import { voiceReadManager } from '../services/voice/VoiceReadManager';
-import config, { ELEVENLABS_MODELS, ELEVENLABS_VOICES } from '../config';
+import config, { ELEVENLABS_MODELS, ELEVENLABS_VOICE_CHOICES, isKnownVoiceId, findVoiceById, ELEVENLABS_VOICES } from '../config';
 import { logger } from '../services/logging';
 
 export const data = {
@@ -37,10 +37,7 @@ export const data = {
       description: 'Voice to use for reading messages',
       type: 3, // STRING
       required: false,
-      choices: Object.values(ELEVENLABS_VOICES).map(voice => ({
-        name: `${voice.name} - ${voice.description}`,
-        value: voice.id
-      }))
+      choices: ELEVENLABS_VOICE_CHOICES
     }
   ]
 };
@@ -174,7 +171,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
       try {
         // Validate voice selection
-        if (voiceId && !Object.values(ELEVENLABS_VOICES).some(v => v.id === voiceId)) {
+        if (voiceId && !isKnownVoiceId(voiceId)) {
           return interaction.editReply({
             content: '❌ **Invalid voice selected**\n\nThe selected voice is not available. Please choose a valid voice from the options.'
           });
@@ -213,8 +210,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         const selectedModel = modelId ? ELEVENLABS_MODELS[modelId] : ELEVENLABS_MODELS.eleven_flash_v2_5;
         // Get selected voice or default to Rachel
         const selectedVoice = (
-          voiceId ? Object.values(ELEVENLABS_VOICES).find(v => v.id === voiceId) : 
-          config.elevenLabsVoiceId ? Object.values(ELEVENLABS_VOICES).find(v => v.id === config.elevenLabsVoiceId) : 
+          voiceId ? findVoiceById(voiceId) :
+          config.elevenLabsVoiceId ? findVoiceById(config.elevenLabsVoiceId) :
           ELEVENLABS_VOICES.rachel
         );
         

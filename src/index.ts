@@ -3,6 +3,7 @@ import { voiceReadManager } from './services/voice/VoiceReadManager';
 import { logger } from './services/logging';
 import config from './config';
 import * as readCommand from './commands/read';
+import * as voiceCommand from './commands/voice';
 import * as serversCommand from './commands/servers';
 import { Command } from './types/Command';
 import { initializeDiscordLogger, getDiscordLogger } from './utils/discordLogger';
@@ -20,6 +21,7 @@ const client = new Client({
 // Command collection
 const commands = new Collection<string, Command>();
 commands.set(readCommand.data.name, readCommand as Command);
+commands.set(voiceCommand.data.name, voiceCommand as Command);
 commands.set(serversCommand.data.name, serversCommand as Command);
 
 client.once(Events.ClientReady, async () => {
@@ -107,7 +109,8 @@ client.on(Events.MessageCreate, async message => {
       sessionInfo.guildId,
       sessionInfo.voiceChannelId,
       message.content,
-      displayName
+      displayName,
+      message.author.id
     );
     
   } catch (error) {

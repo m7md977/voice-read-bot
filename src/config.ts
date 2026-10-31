@@ -214,6 +214,19 @@ export const ELEVENLABS_MODELS: { [key: string]: ElevenLabsModel } = {
   // models fail on the text-to-speech endpoint and must not be listed.
 };
 
+export function findVoiceById(voiceId: string): ElevenLabsVoice | undefined {
+  return Object.values(ELEVENLABS_VOICES).find(voice => voice.id === voiceId);
+}
+
+export function isKnownVoiceId(voiceId: string): boolean {
+  return Object.values(ELEVENLABS_VOICES).some(voice => voice.id === voiceId);
+}
+
+export const ELEVENLABS_VOICE_CHOICES = Object.values(ELEVENLABS_VOICES).map(voice => ({
+  name: `${voice.name} - ${voice.description}`.slice(0, 100),
+  value: voice.id
+}));
+
 interface Config {
   botToken: string;
   clientId: string;
