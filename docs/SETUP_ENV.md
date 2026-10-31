@@ -27,7 +27,7 @@ GLOBAL_COMMANDS=true                       ← Keep this as is
 TTS_PROVIDER=elevenlabs                    ← Keep this as is
 ELEVENLABS_API_KEY=your_elevenlabs_api_key_here ← Replace this!
 ELEVENLABS_VOICE_ID=21m00Tcm4TlvDq8ikWAM  ← Default voice (or change)
-ELEVENLABS_TTS_MODEL_ID=eleven_turbo_v2_5 ← Keep this as is
+ELEVENLABS_TTS_MODEL_ID=eleven_flash_v2_5 ← Keep this as is
 
 # Optional: Voice Read Bypass Role
 # BYPASSROLEID=role_id_here                ← Uncomment and add if needed
@@ -82,7 +82,7 @@ GLOBAL_COMMANDS=true
 TTS_PROVIDER=elevenlabs
 ELEVENLABS_API_KEY=sk_1234567890abcdef1234567890abcdef
 ELEVENLABS_VOICE_ID=21m00Tcm4TlvDq8ikWAM
-ELEVENLABS_TTS_MODEL_ID=eleven_turbo_v2_5
+ELEVENLABS_TTS_MODEL_ID=eleven_flash_v2_5
 
 # Optional: Voice Read Bypass Role
 BYPASSROLEID=987654321098765432

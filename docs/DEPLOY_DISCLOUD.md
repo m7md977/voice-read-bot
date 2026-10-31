@@ -60,7 +60,7 @@ GLOBAL_COMMANDS=true
 TTS_PROVIDER=elevenlabs
 ELEVENLABS_API_KEY=your_actual_elevenlabs_api_key
 ELEVENLABS_VOICE_ID=21m00Tcm4TlvDq8ikWAM
-ELEVENLABS_TTS_MODEL_ID=eleven_turbo_v2_5
+ELEVENLABS_TTS_MODEL_ID=eleven_flash_v2_5
 ```
 
 **Optional** (if you want bypass role):

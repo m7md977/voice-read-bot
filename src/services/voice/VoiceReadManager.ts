@@ -50,6 +50,7 @@ class VoiceReadSession {
   private emptyChannelTimer: NodeJS.Timeout | null = null;
   private voiceActivityTimer: NodeJS.Timeout | null = null;
   private speakingUsers = new Map<string, number>(); // userId -> timestamp when started speaking
+  private lastSpokenUserTag: string | null = null;
   private readonly EMPTY_CHANNEL_TIMEOUT = 30000; // 30 seconds
   private readonly VOICE_ACTIVITY_PAUSE = 2500; // 2.5 seconds after speaking stops (more natural)
   private readonly MIN_SPEAKING_DURATION = 700; // Ignore brief sounds under 0.7s
@@ -414,7 +415,9 @@ class VoiceReadSession {
     if (!next) return;
     this.isPlaying = true;
 
-    const textToSpeak = next.userTag ? `${next.userTag} says: ${next.text}` : next.text;
+    const shouldAnnounceName = Boolean(next.userTag) && next.userTag !== this.lastSpokenUserTag;
+    const textToSpeak = shouldAnnounceName ? `${next.userTag} says: ${next.text}` : next.text;
+    this.lastSpokenUserTag = next.userTag ?? null;
     const source = await this.synthesize(textToSpeak);
     if (!source) {
       this.isPlaying = false;
@@ -541,6 +544,7 @@ class VoiceReadSession {
     this.clearVoiceActivityTimer();
     this.speakingUsers.clear();
     this.voiceActivityPaused = false;
+    this.lastSpokenUserTag = null;
     try { this.player?.stop(true); } catch { /* noop */ }
     try { this.connection?.destroy(); } catch { /* noop */ }
     this.player = null;

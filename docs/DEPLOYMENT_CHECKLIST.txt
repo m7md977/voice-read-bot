@@ -51,7 +51,7 @@ In Discloud dashboard → Bot Settings → Environment Variables:
 [ ] Add TTS_PROVIDER (set to: elevenlabs)
 [ ] Add ELEVENLABS_API_KEY
 [ ] Add ELEVENLABS_VOICE_ID
-[ ] Add ELEVENLABS_TTS_MODEL_ID (set to: eleven_turbo_v2_5)
+[ ] Add ELEVENLABS_TTS_MODEL_ID (set to: eleven_flash_v2_5)
 [ ] Add BYPASSROLEID (if using bypass role feature)
 [ ] Double-check all values are correct (no extra spaces!)
 

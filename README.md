@@ -29,7 +29,7 @@ The main command for controlling voice reading.
   - `skip` — Skip the message currently being read
   - `clear` — Clear the pending message queue
   - `status` — Show queue size and playback state
-- `model` (optional): ElevenLabs model to use for synthesis (e.g. Flash v2.5, Multilingual v2, Eleven v3). Defaults to the value of `ELEVENLABS_TTS_MODEL_ID`, or Flash v2.5.
+- `model` (optional): ElevenLabs model to use for synthesis (e.g. v4 Turbo, Flash v2.5, Eleven v4). Defaults to the value of `ELEVENLABS_TTS_MODEL_ID`, or Flash v2.5.
 - `voice` (optional): Voice to read with. Defaults to `ELEVENLABS_VOICE_ID`, or a Rachel-like voice.
 
 **Example:**
@@ -158,7 +158,7 @@ https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=31
 
 ### Voices & Models
 
-Voices and their ElevenLabs IDs are defined in [`src/config.ts`](src/config.ts) and exposed as choices on the `/read` command. English (US & UK) and Modern Standard / Gulf Arabic voices are included. Available models range from `eleven_v3` (highest quality) to `eleven_flash_v2_5` (fastest). Set a default voice/model via `ELEVENLABS_VOICE_ID` and `ELEVENLABS_TTS_MODEL_ID`, or override per-session with the command options.
+Voices and their ElevenLabs IDs are defined in [`src/config.ts`](src/config.ts) and exposed as choices on the `/read` command. English (US & UK) and Modern Standard / Gulf Arabic voices are included. Available models range from `eleven_v4` / `eleven_v4_turbo` (highest quality) to `eleven_flash_v2_5` (fastest/cheapest). Set a default voice/model via `ELEVENLABS_VOICE_ID` and `ELEVENLABS_TTS_MODEL_ID`, or override per-session with the command options.
 
 ### Message Handling
 

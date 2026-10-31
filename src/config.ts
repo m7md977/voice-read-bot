@@ -134,10 +134,54 @@ export interface ElevenLabsModel {
 }
 
 export const ELEVENLABS_MODELS: { [key: string]: ElevenLabsModel } = {
+  'eleven_v4_turbo': {
+    id: 'eleven_v4_turbo',
+    name: 'Eleven v4 Turbo',
+    description: 'Most expressive real-time model — 90+ languages (~100ms)',
+    isRealTime: true,
+    defaultSettings: {
+      // v4 only uses stability + similarity (no style / speaker boost)
+      stability: 0.5,
+      similarity_boost: 0.75
+    }
+  },
+  'eleven_flash_v2_5': {
+    id: 'eleven_flash_v2_5',
+    name: 'Eleven Flash v2.5',
+    description: 'Fastest & cheapest — good quality (40k chars/~40min)',
+    isRealTime: true,
+    defaultSettings: {
+      stability: 0.5,
+      similarity_boost: 0.7
+    }
+  },
+  'eleven_v4': {
+    id: 'eleven_v4',
+    name: 'Eleven v4',
+    description: 'Highest quality & expressiveness — 90+ languages (10k chars/~10min)',
+    isRealTime: false,
+    defaultSettings: {
+      // v4 only uses stability + similarity (no style / speaker boost)
+      stability: 0.5,
+      similarity_boost: 0.75
+    }
+  },
+  'eleven_v3_conversational': {
+    id: 'eleven_v3_conversational',
+    name: 'Eleven v3 Conversational',
+    description: 'Expressive real-time model — 70+ languages (~165ms)',
+    isRealTime: true,
+    defaultSettings: {
+      stability: 0.5, // v3 family only accepts 0.0, 0.5, or 1.0
+      similarity_boost: 0.7,
+      style: 0.7,
+      use_speaker_boost: true
+    }
+  },
   'eleven_v3': {
     id: 'eleven_v3',
     name: 'Eleven v3',
-    description: 'Latest generation model with highest quality (3k chars/~3min)',
+    description: 'Expressive high quality — 70+ languages (5k chars/~5min)',
     isRealTime: false,
     defaultSettings: {
       stability: 0.5, // v3 only accepts 0.0, 0.5, or 1.0
@@ -146,39 +190,28 @@ export const ELEVENLABS_MODELS: { [key: string]: ElevenLabsModel } = {
       use_speaker_boost: true
     }
   },
-  'eleven_turbo_v2_5': {
-    id: 'eleven_turbo_v2_5',
-    name: 'Eleven Turbo v2.5 (legacy)',
-    description: 'Older low-latency model — superseded by Flash v2.5 (40k chars/~40min)',
-    isRealTime: true,
-    defaultSettings: {
-      stability: 0.5,
-      similarity_boost: 0.7
-    }
-  },
-  'eleven_flash_v2_5': {
-    id: 'eleven_flash_v2_5',
-    name: 'Eleven Flash v2.5',
-    description: 'Fastest model with good quality (40k chars/~40min)',
-    isRealTime: true,
-    defaultSettings: {
-      stability: 0.5,
-      similarity_boost: 0.7
-    }
-  },
   'eleven_multilingual_v2': {
     id: 'eleven_multilingual_v2',
     name: 'Eleven Multilingual v2',
-    description: 'Highest quality, best for non-English text (10k chars/~10min)',
+    description: 'Stable long-form quality — 29 languages (10k chars/~10min)',
     isRealTime: false,
     defaultSettings: {
       stability: 0.7,
       similarity_boost: 0.7
     }
+  },
+  'eleven_turbo_v2_5': {
+    id: 'eleven_turbo_v2_5',
+    name: 'Eleven Turbo v2.5 (legacy)',
+    description: 'Older low-latency model — prefer Flash v2.5 or v4 Turbo (40k chars/~40min)',
+    isRealTime: true,
+    defaultSettings: {
+      stability: 0.5,
+      similarity_boost: 0.7
+    }
   }
-  // NOTE: only text-to-speech model_ids belong here. eleven_english_sts_v2 was
-  // removed because it is a speech-to-speech (voice changer) model and fails on
-  // the text-to-speech endpoint.
+  // NOTE: only text-to-speech model_ids belong here. STS / TTV / Scribe / Music
+  // models fail on the text-to-speech endpoint and must not be listed.
 };
 
 interface Config {
