@@ -17,13 +17,13 @@ Your bot now has **smarter content filtering** and reads **nicknames** instead o
 
 **Before:**
 ```
-"john_smith_12345 says: Hello everyone!"
+"john_smith_12345: Hello everyone!"
 ```
 
 **After:**
 ```
-"Johnny says: Hello everyone!"              (using server nickname)
-"VeryLongNickname... says: Hello everyone!" (shortened to 20 chars)
+"Johnny: Hello everyone!"              (using server nickname)
+"VeryLongNickname...: Hello everyone!" (shortened to 20 chars)
 ```
 
 ### **Why This Matters:**
@@ -78,7 +78,7 @@ Check out this awesome site! https://example.com and also www.cool-stuff.net
 
 **Bot reads:**
 ```
-"Alex says: Check out this awesome site! and also"
+"Alex: Check out this awesome site! and also"
 ```
 Links removed, rest of message is read!
 
@@ -93,7 +93,7 @@ Hey <@123456789> check <#987654321> for updates!
 
 **Bot reads:**
 ```
-"Mike says: Hey someone check a channel for updates!"
+"Mike: Hey someone check a channel for updates!"
 ```
 
 ---
@@ -107,7 +107,7 @@ This is **very important** and *super cool*!
 
 **Bot reads:**
 ```
-"Sarah says: This is very important and super cool!"
+"Sarah: This is very important and super cool!"
 ```
 Formatting removed, natural speech!
 
@@ -122,7 +122,7 @@ Join us at discord.gg/example! <@123456789> come to <#999999999>
 
 **Bot reads:**
 ```
-"Chris says: Join us at someone come to a channel"
+"Chris: Join us at someone come to a channel"
 ```
 
 ---

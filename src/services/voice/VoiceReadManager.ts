@@ -418,7 +418,7 @@ class VoiceReadSession {
     this.isPlaying = true;
 
     const shouldAnnounceName = Boolean(next.userTag) && next.userTag !== this.lastSpokenUserTag;
-    const textToSpeak = shouldAnnounceName ? `${next.userTag} says: ${next.text}` : next.text;
+    const textToSpeak = shouldAnnounceName ? `${next.userTag}: ${next.text}` : next.text;
     this.lastSpokenUserTag = next.userTag ?? null;
     const assignedVoiceId = next.userId ? userVoiceStore.get(this.guild.id, next.userId) : undefined;
     const source = await this.synthesize(textToSpeak, assignedVoiceId);
