@@ -33,6 +33,8 @@ The main command for controlling voice reading.
   - `status` — Show queue size and playback state
 - `model` (optional): ElevenLabs model to use for synthesis (e.g. v4 Turbo, Flash v2.5, Eleven v4). Defaults to the value of `ELEVENLABS_TTS_MODEL_ID`, or Flash v2.5.
 - `voice` (optional): Default voice to read with. Defaults to `ELEVENLABS_VOICE_ID`, or a Rachel-like voice. Per-user voices from `/voice` override this.
+- `speed` (optional): Speaking speed, 0.5–2.0 (1 = normal).
+- `volume` (optional): Playback volume percent, 0–200 (100 = normal; up to 200 boosts quiet voices).
 
 **Example:**
 

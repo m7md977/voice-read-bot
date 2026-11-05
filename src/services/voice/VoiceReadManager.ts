@@ -27,6 +27,8 @@ type QueueItem = {
 
 type VoiceReadOptions = {
   speed: number;
+  /** Resource volume multiplier: 1 = normal, 0-2 supported (inline volume transform) */
+  volume: number;
   maxLength: number;
   filterLinks: boolean;
   pauseOnVoiceActivity: boolean;
@@ -452,6 +454,8 @@ class VoiceReadSession {
         inputType: StreamType.Arbitrary,
         inlineVolume: true,
       });
+      // Volume is applied after creation via the inline volume transformer
+      resource.volume?.setVolume(this.options.volume);
       this.player.play(resource);
       // Fire-and-forget: keep the live "Now Reading" message in sync so the
       // reaction controls are always visible at the bottom of the channel
@@ -814,6 +818,7 @@ export class VoiceReadManager {
   public async startSession(guild: Guild, voiceChannel: VoiceBasedChannel, sourceTextChannel: TextBasedChannel, options?: Partial<VoiceReadOptions>): Promise<void> {
     const defaultOptions: VoiceReadOptions = {
       speed: 0.9, // Slightly slower than normal for better comprehension
+      volume: 1.0, // Normal volume
       maxLength: 1000,
       filterLinks: true,
       pauseOnVoiceActivity: false, // Never pause for voice activity

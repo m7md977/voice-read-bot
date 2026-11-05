@@ -38,6 +38,22 @@ export const data = {
       type: 3, // STRING
       required: false,
       choices: ELEVENLABS_VOICE_CHOICES
+    },
+    {
+      name: 'speed',
+      description: 'Speaking speed (0.5 = half speed, 1 = normal, 2 = double)',
+      type: 10, // NUMBER
+      required: false,
+      min_value: 0.5,
+      max_value: 2.0
+    },
+    {
+      name: 'volume',
+      description: 'Playback volume percent (100 = normal, up to 200 boosts)',
+      type: 10, // NUMBER
+      required: false,
+      min_value: 0,
+      max_value: 200
     }
   ]
 };
@@ -119,8 +135,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const modelId = interaction.options.getString('model');
     const voiceId = interaction.options.getString('voice');
     
+    // Playback settings (defaults when not provided)
+    const speed = interaction.options.getNumber('speed') ?? 1.0;
+    const volumePercent = interaction.options.getNumber('volume') ?? 100;
+    const volume = volumePercent / 100; // resource volume: 0 = mute, 1 = normal, 2 = max boost
+
     // Fixed defaults (these are not exposed as command options)
-    const speed = 1.0; // Normal speed
     const maxLength = 3000; // Default max length
     const emojiMode = 'replace' as const; // Convert emojis to spoken descriptions (e.g. 🔥 -> "fire")
 
@@ -179,6 +199,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
         const options = {
           speed,
+          volume,
           maxLength,
           filterLinks: true,
           processEmojis: true,
@@ -222,7 +243,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           fields: [
             {
               name: '⚙️ Settings',
-              value: `• **Model:** ${selectedModel.name}${!selectedModel.isRealTime ? ' ⚠️' : ''}\n• **Voice:** ${selectedVoice?.name || 'Rachel'}`,
+              value: `• **Model:** ${selectedModel.name}${!selectedModel.isRealTime ? ' ⚠️' : ''}\n• **Voice:** ${selectedVoice?.name || 'Rachel'}\n• **Speed:** ${speed}x\n• **Volume:** ${volumePercent}%`,
               inline: false
             }
           ],
