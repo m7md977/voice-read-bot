@@ -310,7 +310,37 @@ export class EmojiProcessor {
     '💤': 'sleeping symbol'
   };
 
-  private static readonly EMOJI_REGEX = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F900}-\u{1F9FF}]|[\u{1F018}-\u{1F270}]|[\u{238C}-\u{2454}]|[\u{20D0}-\u{20FF}]/gu;
+  /**
+   * Matches full emoji sequences (not just single code points): flag pairs,
+   * the base emoji plus optional skin-tone modifiers / variation selectors /
+   * Zero-Width-Joiner chains (👨‍👩‍👧‍👦). Consecutive different emojis are
+   * NOT joined, so deduping can collapse repeats like 😂😂😂.
+   */
+  private static readonly EMOJI_SEQUENCE_REGEX = /\p{Regional_Indicator}{2}|\p{Extended_Pictographic}[\u{1F3FB}-\u{1F3FF}]?\uFE0F?(?:\u200D\p{Extended_Pictographic}[\u{1F3FB}-\u{1F3FF}]?\uFE0F?)*/gu;
+
+  /**
+   * Remove repeated emojis so the TTS reads each unique emoji only once.
+   * Repeats are detected by base emoji, so '👍🏽👍🏻' (same thumb, different
+   * skin tone) and '🇸🇦🇸🇦' still count as one. Whitespace left behind is
+   * cleaned up by the caller's whitespace normalization.
+   */
+  public static dedupeEmojis(text: string): string {
+    const seenBases = new Set<string>();
+    return text.replace(this.EMOJI_SEQUENCE_REGEX, (emoji) => {
+      if (!this.hasSeenBase(emoji, seenBases)) return '';
+      return emoji;
+    });
+  }
+
+  /** Track a sequence's base emoji; returns false if the base was already seen */
+  private static hasSeenBase(emoji: string, seenBases: Set<string>): boolean {
+    const code = emoji.codePointAt(0);
+    if (code === undefined) return true;
+    const base = String.fromCodePoint(code);
+    if (seenBases.has(base)) return false;
+    seenBases.add(base);
+    return true;
+  }
 
   /**
    * Process text and convert emojis to readable descriptions
@@ -321,13 +351,25 @@ export class EmojiProcessor {
   } = { mode: 'explain', addPauses: true }): string {
     if (!text) return text;
 
+    // Read each unique emoji once: collapse repeats (😂😂😂 -> 😂) before
+    // converting to descriptions so the TTS doesn't spam the same word.
+    text = this.dedupeEmojis(text);
+
     // Single left-to-right pass over the original string. Using String.replace
     // with the global regex + a callback means every occurrence (including
     // repeated identical emojis) is handled exactly once, and replaced text is
     // never re-scanned — unlike a loop of `replace(emoji, ...)` which only
     // replaces the first literal match and can double-process 'explain' output.
-    return text.replace(this.EMOJI_REGEX, (emoji: string) => {
-      const description = this.EMOJI_MAPPINGS[emoji] || this.getGenericEmojiDescription(emoji);
+    //
+    // Emojis are handled as full sequences (flags, skin tones, ZWJ chains) so a
+    // compound emoji like 👨‍👩‍👧‍👦 is described once instead of once per
+    // code point.
+    return text.replace(this.EMOJI_SEQUENCE_REGEX, (emoji: string) => {
+      // Try the full sequence first ('✖️', '👍🏽'), then the bare base emoji
+      // ('👍'), then a generic fallback.
+      const baseCode = emoji.codePointAt(0);
+      const base = baseCode !== undefined ? String.fromCodePoint(baseCode) : '';
+      const description = this.EMOJI_MAPPINGS[emoji] || (base ? this.EMOJI_MAPPINGS[base] : undefined) || this.getGenericEmojiDescription(emoji);
 
       switch (options.mode) {
         case 'replace':
@@ -364,19 +406,19 @@ export class EmojiProcessor {
 
   /**
    * Check if text contains emojis.
-   * Uses String.match (not RegExp.test) because EMOJI_REGEX is global: test()
+   * Uses String.match (not RegExp.test) because the regex is global: test()
    * would advance and persist lastIndex on the shared regex, giving
    * inconsistent results across calls.
    */
   public static containsEmojis(text: string): boolean {
-    return (text.match(this.EMOJI_REGEX)?.length ?? 0) > 0;
+    return (text.match(this.EMOJI_SEQUENCE_REGEX)?.length ?? 0) > 0;
   }
 
   /**
-   * Count emojis in text
+   * Count emojis in text (full sequences, so a flag counts as one emoji)
    */
   public static countEmojis(text: string): number {
-    const matches = text.match(this.EMOJI_REGEX);
+    const matches = text.match(this.EMOJI_SEQUENCE_REGEX);
     return matches ? matches.length : 0;
   }
 }

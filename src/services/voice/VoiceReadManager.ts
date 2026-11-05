@@ -287,6 +287,9 @@ class VoiceReadSession {
     
     // Process emojis if enabled
     if (this.options.processEmojis && EmojiProcessor.containsEmojis(processedText)) {
+      // Collapse repeated emojis first (😂😂😂 -> 😂) so each unique emoji is read once
+      processedText = EmojiProcessor.dedupeEmojis(processedText);
+
       const emojiCount = EmojiProcessor.countEmojis(processedText);
       logger.info('VOICE_READ', `Processing ${emojiCount} emoji(s) in message`);
       

@@ -7,7 +7,7 @@ A lightweight Discord bot that reads text messages aloud in voice channels using
 - 🎙️ **Voice Message Reading**: Joins a voice channel and reads new messages from a text channel aloud
 - 🗣️ **Multiple Voices**: Choose from a range of English and Arabic ElevenLabs voices, including a personal voice per user
 - 🎚️ **Selectable Models**: Pick the ElevenLabs model that best balances quality vs. speed
-- 😊 **Emoji Processing**: Converts emojis to spoken descriptions (🔥 → "fire")
+- 😊 **Emoji Processing**: Converts emojis to spoken descriptions (🔥 → "fire"), reading each unique emoji only once (😂😂😂 → one "laughing")
 - 🔗 **Link & Mention Filtering**: Strips URLs, invites, and mentions so they aren't read aloud
 - 🧹 **Markdown Cleanup**: Removes bold/italic/spoiler/code formatting before speaking
 - ⏰ **Auto-Leave**: Automatically leaves a voice channel after it's been empty for 30 seconds

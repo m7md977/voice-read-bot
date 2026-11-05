@@ -15,6 +15,8 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildVoiceStates,
+    // Required to receive MessageReactionAdd for the skip/stop reaction controls
+    GatewayIntentBits.GuildMessageReactions,
   ],
 });
 
