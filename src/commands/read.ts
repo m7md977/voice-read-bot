@@ -226,8 +226,40 @@ export async function execute(interaction: ChatInputCommandInteraction) {
               inline: false
             }
           ],
-          footer: { text: selectedModel.isRealTime ? 'Use /read action:pause, resume, or stop to control playback' : '⚠️ Non-realtime model may have higher latency' }
+          footer: { text: selectedModel.isRealTime ? 'React ⏭️ / ⏹️ on the control message, or use /read to control playback' : '⚠️ Non-realtime model may have higher latency' }
         };
+
+        // Post a public, persistent control message with reaction controls
+        try {
+          if (interaction.channel && 'send' in interaction.channel && typeof interaction.channel.send === 'function') {
+            const controlMessage = await interaction.channel.send({
+              embeds: [{
+                color: 0x5865F2, // Blurple
+                title: '🎙️ Voice Reading Active',
+                description: `Now reading messages from ${interaction.channel} in ${voiceChannel}.`,
+                fields: [
+                  {
+                    name: '🎮 Controls',
+                    value: '⏭️ — React to **skip** the current message\n⏹️ — React to **stop** the session',
+                    inline: false
+                  }
+                ],
+                footer: { text: 'Slash commands (/read) still work as usual' }
+              }]
+            });
+
+            // Add reactions; failure here only loses the mouse-only controls
+            await controlMessage.react('⏭️');
+            await controlMessage.react('⏹️');
+
+            const session = voiceReadManager.getSession(interaction.guild.id, voiceChannel.id);
+            session?.setStatusMessage(controlMessage.id);
+            logger.info('VOICE_READ_COMMAND', `Posted control message ${controlMessage.id} with reaction controls`);
+          }
+        } catch (controlError) {
+          // Missing Send Messages / Add Reactions permission — session still runs fine
+          logger.warn('VOICE_READ_COMMAND', 'Could not post reaction control message', controlError, interaction.guild);
+        }
 
         return interaction.editReply({ embeds: [successEmbed] });
         

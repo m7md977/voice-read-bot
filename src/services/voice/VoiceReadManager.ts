@@ -21,6 +21,8 @@ type QueueItem = {
   text: string;
   userTag?: string;
   userId?: string;
+  /** Discord message ID this queue item came from (for edit/delete tracking) */
+  messageId?: string;
 };
 
 type VoiceReadOptions = {
@@ -53,6 +55,10 @@ class VoiceReadSession {
   private voiceActivityTimer: NodeJS.Timeout | null = null;
   private speakingUsers = new Map<string, number>(); // userId -> timestamp when started speaking
   private lastSpokenUserTag: string | null = null;
+  /** Discord message ID of the item currently being (or about to be) spoken, for edit/delete tracking */
+  private currentMessageId: string | null = null;
+  /** Discord message ID of the public control message with reaction controls (skip/stop) */
+  private statusMessageId: string | null = null;
   private readonly EMPTY_CHANNEL_TIMEOUT = 30000; // 30 seconds
   private readonly VOICE_ACTIVITY_PAUSE = 2500; // 2.5 seconds after speaking stops (more natural)
   private readonly MIN_SPEAKING_DURATION = 700; // Ignore brief sounds under 0.7s
@@ -79,11 +85,13 @@ class VoiceReadSession {
       });
       this.player.on(AudioPlayerStatus.Idle, () => {
         this.isPlaying = false;
+        this.currentMessageId = null;
         void this.playNext();
       });
       this.player.on('error', (err) => {
         logger.error('VOICE_READ', 'Audio player error', err);
         this.isPlaying = false;
+        this.currentMessageId = null;
         void this.playNext();
       });
     }
@@ -211,7 +219,7 @@ class VoiceReadSession {
     });
   }
 
-  public async enqueue(text: string, userTag?: string, userId?: string): Promise<void> {
+  public async enqueue(text: string, userTag?: string, userId?: string, messageId?: string): Promise<void> {
     if (this.destroyed || this.isPaused) return;
     
     // Filter text based on options
@@ -224,7 +232,7 @@ class VoiceReadSession {
       this.queue.shift(); // Remove oldest message
     }
     
-    this.queue.push({ text: filteredText, userTag, userId });
+    this.queue.push({ text: filteredText, userTag, userId, messageId });
     logger.debug('VOICE_READ', `Message queued. Queue size: ${this.queue.length}`);
     
     if (!this.isPlaying) {
@@ -416,6 +424,7 @@ class VoiceReadSession {
     const next = this.queue.shift();
     if (!next) return;
     this.isPlaying = true;
+    this.currentMessageId = next.messageId ?? null;
 
     const shouldAnnounceName = Boolean(next.userTag) && next.userTag !== this.lastSpokenUserTag;
     const textToSpeak = shouldAnnounceName ? `${next.userTag}: ${next.text}` : next.text;
@@ -423,6 +432,12 @@ class VoiceReadSession {
     const assignedVoiceId = next.userId ? userVoiceStore.get(this.guild.id, next.userId) : undefined;
     const source = await this.synthesize(textToSpeak, assignedVoiceId);
     if (!source) {
+      this.isPlaying = false;
+      return void this.playNext();
+    }
+    // If the message was deleted/edited away while we were synthesizing, discard it
+    if (next.messageId && this.currentMessageId !== next.messageId) {
+      logger.info('VOICE_READ', 'Message was removed while synthesizing - skipping playback');
       this.isPlaying = false;
       return void this.playNext();
     }
@@ -543,11 +558,13 @@ class VoiceReadSession {
 
   public stop(): void {
     this.destroyed = true;
+    this.deleteStatusMessage();
     this.clearEmptyChannelTimer();
     this.clearVoiceActivityTimer();
     this.speakingUsers.clear();
     this.voiceActivityPaused = false;
     this.lastSpokenUserTag = null;
+    this.currentMessageId = null;
     try { this.player?.stop(true); } catch { /* noop */ }
     try { this.connection?.destroy(); } catch { /* noop */ }
     this.player = null;
@@ -566,6 +583,78 @@ class VoiceReadSession {
     } catch (error) {
       logger.error('VOICE_READ', 'Failed to skip current message', error);
       return false;
+    }
+  }
+
+  /**
+   * Remove all queued items (and any currently-playing message) that came from
+   * the given Discord message. Used when the source message is deleted.
+   */
+  public removeById(messageId: string): boolean {
+    const before = this.queue.length;
+    this.queue = this.queue.filter(item => item.messageId !== messageId);
+    const removed = this.queue.length !== before;
+
+    if (this.currentMessageId === messageId) {
+      // The message currently being read was deleted — stop it so playNext fires
+      this.currentMessageId = null;
+      try {
+        this.player?.stop();
+      } catch { /* noop */ }
+      logger.info('VOICE_READ', 'Stopped playback of a deleted message');
+      return true;
+    }
+
+    if (removed) {
+      logger.info('VOICE_READ', 'Removed deleted message from queue');
+    }
+    return removed;
+  }
+
+  /**
+   * Re-filter and replace the queued text for a message that was edited.
+   * Returns true if a queued item was updated or removed.
+   * Messages currently playing (or being synthesized) are left alone.
+   */
+  public updateById(messageId: string, newContent: string): boolean {
+    if (this.currentMessageId === messageId) {
+      logger.debug('VOICE_READ', 'Edited message is playing/being synthesized - keeping current audio');
+      return false;
+    }
+
+    const index = this.queue.findIndex(item => item.messageId === messageId);
+    if (index === -1) return false;
+
+    const filtered = this.filterText(newContent);
+    if (!filtered) {
+      this.queue.splice(index, 1);
+      logger.info('VOICE_READ', 'Removed edited message from queue (no readable content)');
+      return true;
+    }
+
+    this.queue[index].text = filtered;
+    logger.info('VOICE_READ', 'Updated queued message after edit');
+    return true;
+  }
+
+  /** Store the ID of the public control message so reactions can be matched to this session */
+  public setStatusMessage(messageId: string): void {
+    this.statusMessageId = messageId;
+  }
+
+  public getStatusMessageId(): string | null {
+    return this.statusMessageId;
+  }
+
+  /** Best-effort deletion of the control message when the session ends */
+  private deleteStatusMessage(): void {
+    const messageId = this.statusMessageId;
+    this.statusMessageId = null;
+    if (!messageId) return;
+
+    const channel = this.sourceTextChannel;
+    if (channel && 'send' in channel && typeof channel.send === 'function') {
+      void channel.messages.delete(messageId).catch(() => {/* message may already be gone */});
     }
   }
 
@@ -707,10 +796,45 @@ export class VoiceReadManager {
     }
   }
 
-  public async enqueue(guildId: string, voiceChannelId: string, text: string, userTag?: string, userId?: string): Promise<void> {
+  public async enqueue(guildId: string, voiceChannelId: string, text: string, userTag?: string, userId?: string, messageId?: string): Promise<void> {
     const session = this.sessions.get(this.key(guildId, voiceChannelId));
     if (!session) return;
-    await session.enqueue(text, userTag, userId);
+    await session.enqueue(text, userTag, userId, messageId);
+  }
+
+  /**
+   * Called when a source message is deleted: removes it from the queue and
+   * stops playback if it was the message being read.
+   */
+  public removeMessage(channelId: string, messageId: string): boolean {
+    const key = this.textChannelIndex.get(channelId);
+    if (!key) return false;
+    const session = this.sessions.get(key);
+    if (!session) return false;
+    return session.removeById(messageId);
+  }
+
+  /**
+   * Called when a source message is edited: re-filters and replaces its queued text.
+   */
+  public updateMessage(channelId: string, messageId: string, newContent: string): boolean {
+    const key = this.textChannelIndex.get(channelId);
+    if (!key) return false;
+    const session = this.sessions.get(key);
+    if (!session) return false;
+    return session.updateById(messageId, newContent);
+  }
+
+  /**
+   * Find the active session that owns the given control (status) message, used
+   * for reaction controls (⏭️ skip / ⏹️ stop).
+   */
+  public findSessionByStatusMessage(channelId: string, messageId: string): VoiceReadSession | null {
+    const key = this.textChannelIndex.get(channelId);
+    if (!key) return null;
+    const session = this.sessions.get(key);
+    if (!session || session.getStatusMessageId() !== messageId) return null;
+    return session;
   }
 
   public stopSession(guildId: string, voiceChannelId: string): boolean {

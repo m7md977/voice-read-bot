@@ -110,11 +110,78 @@ client.on(Events.MessageCreate, async message => {
       sessionInfo.voiceChannelId,
       message.content,
       displayName,
-      message.author.id
+      message.author.id,
+      message.id
     );
     
   } catch (error) {
     logger.error('MESSAGE_HANDLER', 'Error processing message for voice reading', error, message.guild);
+  }
+});
+
+// Handle deleted messages: remove them from the voice reading queue
+client.on(Events.MessageDelete, message => {
+  if (!message.guild) return;
+  
+  try {
+    const removed = voiceReadManager.removeMessage(message.channelId, message.id);
+    if (removed) {
+      logger.debug('MESSAGE_HANDLER', `Removed deleted message ${message.id} from voice reading`);
+    }
+  } catch (error) {
+    logger.error('MESSAGE_HANDLER', 'Error handling message deletion', error, message.guild);
+  }
+});
+
+// Handle edited messages: re-filter their queued text (or remove it)
+client.on(Events.MessageUpdate, (oldMessage, newMessage) => {
+  if (!newMessage.guild) return;
+  
+  try {
+    if (typeof newMessage.content === 'string' && newMessage.content.trim()) {
+      voiceReadManager.updateMessage(newMessage.channelId, newMessage.id, newMessage.content);
+    } else {
+      // Content removed/embed-only edit — treat as a delete for queue purposes
+      voiceReadManager.removeMessage(newMessage.channelId, newMessage.id);
+    }
+  } catch (error) {
+    logger.error('MESSAGE_HANDLER', 'Error handling message edit', error, newMessage.guild);
+  }
+});
+
+// Handle reaction controls on the voice reading status message (⏭️ skip / ⏹️ stop)
+client.on(Events.MessageReactionAdd, async (reaction, user) => {
+  try {
+    if (user.bot) return;
+    
+    // Resolve partial reactions before matching
+    if (reaction.partial) {
+      await reaction.fetch();
+    }
+    
+    // Match emojis, ignoring variation selectors (⏭️ vs ⏭)
+    const emojiName = (reaction.emoji.name ?? '').replace(/\uFE0F/g, '');
+    const isSkip = emojiName === '⏭';
+    const isStop = emojiName === '⏹';
+    if (!isSkip && !isStop) return;
+    
+    if (!reaction.message.guild) return;
+    
+    const session = voiceReadManager.findSessionByStatusMessage(reaction.message.channelId, reaction.message.id);
+    if (!session) return;
+    
+    // Keep the control message clean: remove the reaction it matched
+    void reaction.users.remove(user.id).catch(() => { /* needs Manage Messages for others' reactions */ });
+    
+    if (isSkip) {
+      const skipped = voiceReadManager.skipCurrent(session.guild.id, session.voiceChannel.id);
+      logger.info('REACTION_CONTROLS', `${user.username} requested skip via reaction (${skipped ? 'skipped' : 'nothing playing'})`);
+    } else {
+      voiceReadManager.stopSession(session.guild.id, session.voiceChannel.id);
+      logger.info('REACTION_CONTROLS', `${user.username} stopped the session via reaction`);
+    }
+  } catch (error) {
+    logger.error('REACTION_CONTROLS', 'Error handling reaction control', error);
   }
 });
 

@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction } from 'discord.js';
+import { ChatInputCommandInteraction, PermissionFlagsBits } from 'discord.js';
 import { findVoiceById, isKnownVoiceId, ELEVENLABS_VOICE_CHOICES } from '../config';
 import { userVoiceStore } from '../services/voice/UserVoiceStore';
 import { logger } from '../services/logging';
@@ -7,7 +7,7 @@ type VoiceAction = 'set' | 'clear' | 'show';
 
 export const data = {
   name: 'voice',
-  description: 'Assign a TTS voice to yourself or another user',
+  description: 'Assign a TTS voice to yourself (admins can also assign to others)',
   options: [
     {
       name: 'action',
@@ -29,7 +29,7 @@ export const data = {
     },
     {
       name: 'user',
-      description: 'User to assign a voice to (defaults to you)',
+      description: 'User to assign a voice to - admin only, defaults to you',
       type: 6, // USER
       required: false
     }
@@ -51,6 +51,29 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const voiceId = interaction.options.getString('voice');
   const isSelf = targetUser.id === interaction.user.id;
   const targetLabel = isSelf ? 'your' : `${targetUser}'s`;
+
+  // Everyone can manage their own voice; managing someone else's requires admin
+  const isAdmin = Boolean(interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild));
+  if (!isSelf && action !== 'show' && !isAdmin) {
+    await interaction.reply({
+      content: '🔒 You can only change **your own** voice. Ask a server admin to set voices for other users.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  // For other users, make sure they are actually a member of this server
+  if (!isSelf && action !== 'show') {
+    try {
+      await interaction.guild.members.fetch(targetUser.id);
+    } catch {
+      await interaction.reply({
+        content: '❌ That user is not a member of this server.',
+        ephemeral: true
+      });
+      return;
+    }
+  }
 
   try {
     switch (action) {

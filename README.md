@@ -12,6 +12,8 @@ A lightweight Discord bot that reads text messages aloud in voice channels using
 - 🧹 **Markdown Cleanup**: Removes bold/italic/spoiler/code formatting before speaking
 - ⏰ **Auto-Leave**: Automatically leaves a voice channel after it's been empty for 30 seconds
 - ♻️ **Resilient Connections**: Automatically retries and recovers dropped voice connections
+- ⏭️ **Reaction Controls**: React ⏭️ / ⏹️ on the control message to skip or stop without typing a command
+- ✂️ **Edit & Delete Tracking**: Editing or deleting a queued/playing message immediately stops it being read
 
 ## Commands
 
@@ -42,7 +44,7 @@ Start reading in your current voice channel, then send messages in the text chan
 
 ### `/voice`
 
-Assign a specific ElevenLabs voice to a Discord user. That user's messages are read in their assigned voice; everyone else uses the session voice from `/read`.
+Assign a specific ElevenLabs voice to a Discord user. That user's messages are read in their assigned voice; everyone else uses the session voice from `/read`. **Everyone can set their own voice — only admins (Manage Server permission) can set or clear a voice for another user.**
 
 **Options:**
 
@@ -186,6 +188,8 @@ Voices and their ElevenLabs IDs are defined in [`src/config.ts`](src/config.ts) 
 - **Mentions**: User/role/channel mentions are read as "someone" / "a role" / "a channel"
 - **Length Limit**: Very long messages are skipped to avoid runaway TTS usage
 - **Queue Limit**: The per-session queue is capped (oldest dropped) to bound memory use
+- **Edit & Delete Tracking**: If a queued message is edited, its queued text is re-filtered (or dropped if the edit removes all readable content); if it's deleted, it's removed from the queue — and if it's currently playing, playback skips to the next one
+- **Reaction Controls**: Each session posts a control message in the text channel; react ⏭️ to skip the current message or ⏹️ to stop the session (the message is removed when the session ends)
 
 ## Usage
 
