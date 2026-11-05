@@ -59,6 +59,8 @@ class VoiceReadSession {
   private currentMessageId: string | null = null;
   /** Discord message ID of the public control message with reaction controls (skip/stop) */
   private statusMessageId: string | null = null;
+  /** Discord message ID of the live "Now Reading" display with the same reaction controls */
+  private nowPlayingMessageId: string | null = null;
   private readonly EMPTY_CHANNEL_TIMEOUT = 30000; // 30 seconds
   private readonly VOICE_ACTIVITY_PAUSE = 2500; // 2.5 seconds after speaking stops (more natural)
   private readonly MIN_SPEAKING_DURATION = 700; // Ignore brief sounds under 0.7s
@@ -451,6 +453,9 @@ class VoiceReadSession {
         inlineVolume: true,
       });
       this.player.play(resource);
+      // Fire-and-forget: keep the live "Now Reading" message in sync so the
+      // reaction controls are always visible at the bottom of the channel
+      void this.updateNowPlayingMessage(textToSpeak).catch(() => {});
     } catch (err) {
       logger.error('VOICE_READ', 'Failed to create/play resource', err);
       this.isPlaying = false;
@@ -562,6 +567,7 @@ class VoiceReadSession {
   public stop(): void {
     this.destroyed = true;
     this.deleteStatusMessage();
+    this.deleteNowPlayingMessage();
     this.clearEmptyChannelTimer();
     this.clearVoiceActivityTimer();
     this.speakingUsers.clear();
@@ -649,10 +655,71 @@ class VoiceReadSession {
     return this.statusMessageId;
   }
 
+  /** True if the given message belongs to this session's reaction controls (start message or live "Now Reading") */
+  public ownsControlMessage(messageId: string): boolean {
+    return this.statusMessageId === messageId || this.nowPlayingMessageId === messageId;
+  }
+
+  /**
+   * Post (first time) or update the live "Now Reading" message in the source
+   * text channel so the skip/stop reactions are always visible without
+   * scrolling up to the session start message. Fire-and-forget: playback is
+   * never delayed by this.
+   */
+  private async updateNowPlayingMessage(spokenText: string): Promise<void> {
+    if (this.destroyed) return;
+
+    const channel = this.sourceTextChannel;
+    if (!channel || !('send' in channel) || typeof channel.send !== 'function') return;
+
+    // Keep embeds well under the limits for long messages
+    const preview = spokenText.length > 300 ? `${spokenText.slice(0, 297)}…` : spokenText;
+    const payload = {
+      embeds: [{
+        color: 0x2db466,
+        title: '🔊 Now Reading',
+        description: preview,
+        footer: { text: 'React ⏭️ to skip, ⏹️ to stop' }
+      }]
+    };
+
+    // Update the existing display in place when we have one
+    if (this.nowPlayingMessageId && 'messages' in channel && typeof channel.messages?.edit === 'function') {
+      try {
+        await channel.messages.edit(this.nowPlayingMessageId, payload);
+        return;
+      } catch {
+        // Message may have been deleted — fall through and post a new one
+        this.nowPlayingMessageId = null;
+      }
+    }
+
+    try {
+      const message = await channel.send(payload);
+      this.nowPlayingMessageId = message.id;
+      await message.react('⏭️');
+      await message.react('⏹️');
+    } catch (error) {
+      logger.warn('VOICE_READ', 'Could not post the "Now Reading" status message', error);
+    }
+  }
+
   /** Best-effort deletion of the control message when the session ends */
   private deleteStatusMessage(): void {
     const messageId = this.statusMessageId;
     this.statusMessageId = null;
+    if (!messageId) return;
+
+    const channel = this.sourceTextChannel;
+    if (channel && 'send' in channel && typeof channel.send === 'function') {
+      void channel.messages.delete(messageId).catch(() => {/* message may already be gone */});
+    }
+  }
+
+  /** Best-effort deletion of the live "Now Reading" message when the session ends */
+  private deleteNowPlayingMessage(): void {
+    const messageId = this.nowPlayingMessageId;
+    this.nowPlayingMessageId = null;
     if (!messageId) return;
 
     const channel = this.sourceTextChannel;
@@ -829,15 +896,16 @@ export class VoiceReadManager {
   }
 
   /**
-   * Find the active session that owns the given control (status) message, used
-   * for reaction controls (⏭️ skip / ⏹️ stop).
+   * Find the active session that owns the given control message — either the
+   * session start message or the live "Now Reading" display — used for
+   * reaction controls (⏭️ skip / ⏹️ stop).
    */
   public findSessionByStatusMessage(channelId: string, messageId: string): VoiceReadSession | null {
     const key = this.textChannelIndex.get(channelId);
     if (!key) return null;
     const session = this.sessions.get(key);
-    if (!session || session.getStatusMessageId() !== messageId) return null;
-    return session;
+    if (!session) return null;
+    return session.ownsControlMessage(messageId) ? session : null;
   }
 
   public stopSession(guildId: string, voiceChannelId: string): boolean {

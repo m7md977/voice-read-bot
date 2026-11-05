@@ -189,7 +189,7 @@ Voices and their ElevenLabs IDs are defined in [`src/config.ts`](src/config.ts) 
 - **Length Limit**: Very long messages are skipped to avoid runaway TTS usage
 - **Queue Limit**: The per-session queue is capped (oldest dropped) to bound memory use
 - **Edit & Delete Tracking**: If a queued message is edited, its queued text is re-filtered (or dropped if the edit removes all readable content); if it's deleted, it's removed from the queue — and if it's currently playing, playback skips to the next one
-- **Reaction Controls**: Each session posts a control message in the text channel; react ⏭️ to skip the current message or ⏹️ to stop the session (the message is removed when the session ends)
+- **Reaction Controls**: Each session posts a control message in the text channel, plus a live "🔊 Now Reading" message that updates with the current message — both accept ⏭️ to skip or ⏹️ to stop (they're removed when the session ends)
 
 ## Usage
 
